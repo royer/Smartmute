@@ -1,4 +1,40 @@
+#########################################
+#
+# git ignore files for Android Studio
+#
+# Begin
+#
+#########################################
+
+# build application files
+*.apk
+*.ap_
+# Files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+build/
+
 .gradle
-/local.properties
-/.idea/workspace.xml
+local.properties
+.idea/workspace.xml
+
+# OSX files
 .DS_Store
+
+# Windows thumbnail db
+Thumbs.db
+
+# temp files
+*~
+#########################################
+#
+# git ignore files for Android Studio
+# End
+#
+#########################################
