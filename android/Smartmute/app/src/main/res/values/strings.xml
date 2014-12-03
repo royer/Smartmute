@@ -25,4 +25,31 @@
         <item>About</item>
     </string-array>
 
+    <string-array name="rule_type">
+        <item>Location</item>
+        <item>Time Schedule</item>
+        <item>Wifi Network</item>
+    </string-array>
+
+    <string name="title_activity_wifi_edit">WifiEdit</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="SSID_Label">SSID:</string>
+    <string name="label_NameEdit">Name:</string>
+    <string name="label_save">Save</string>
+    <string name="vibrate">Vibrate</string>
+    <string name="slience">Slience</string>
+    <string name="ringmode">Ring mode:</string>
+    <string name="sound">Sound</string>
+    <string name="title_activity_time_rule">TimeRuleActivity</string>
+    <string name="label_description">Description:</string>
+    <string name="label_start">Start:</string>
+    <string name="label_end">End:</string>
+    <string name="sunday_3_abbreviation">SUN</string>
+    <string name="monday_3_abbreviation">MON</string>
+    <string name="tuesday_3_abbreviation">TUE</string>
+    <string name="wednesday_3_abbreviation">WED</string>
+    <string name="thursday_3_abbreviation">THU</string>
+    <string name="friday_3_abbreviation">FRI</string>
+    <string name="saturday_3_abbreviation">SAT</string>
+
 </resources>

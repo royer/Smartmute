@@ -16,6 +16,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <provider
+            android:name=".content.MuteRulesProvider"
+            android:authorities="com.bangz.smartmute.provider"
+            android:enabled="true"
+            android:exported="false" >
+        </provider>
+
+        <activity
+            android:name=".WifiEditActivity"
+            android:label="@string/title_activity_wifi_edit" >
+        </activity>
+        <activity
+            android:name=".TimeRuleEditActivity"
+            android:label="@string/title_activity_time_rule" >
+        </activity>
     </application>
 
 </manifest>

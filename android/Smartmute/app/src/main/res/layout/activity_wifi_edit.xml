@@ -1,0 +1,96 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    tools:context="bangz.smartmute.WifiEditActivity">
+
+    <TextView
+        android:text="@string/SSID_Label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView" />
+
+    <EditText
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/SSID"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/label_NameEdit"
+        android:id="@+id/Name_Label"
+        android:layout_below="@+id/SSID"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/WifiRuleName"
+        android:layout_below="@+id/Name_Label"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textRingMode"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/WifiRuleName"
+        android:layout_marginTop="7dp"
+        android:text="@string/ringmode"/>
+
+    <!-- If have time, use custom SeekBar to replace this RadioGroup -->
+    <RadioGroup
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/ringmode"
+        android:layout_below="@+id/textRingMode"
+        android:layout_alignParentLeft="true"
+        android:layout_margin="5dp"
+        android:checkedButton="@+id/vibrate"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/vibrate"
+            android:text="@string/vibrate"/>
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/slience"
+            android:layout_marginLeft="20dp"
+            android:text="@string/slience"/>
+
+        <RadioButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/sound"
+            android:layout_marginLeft="20dp"
+            android:text="@string/sound"/>
+
+    </RadioGroup>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text = "@string/label_save"
+        android:id="@+id/SaveWifiRule"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+
+
+</RelativeLayout>

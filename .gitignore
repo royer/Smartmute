@@ -8,6 +8,8 @@
 
 # build application files
 *.apk
+.idea
+*.iml
 *.ap_
 # Files for the dex VM
 *.dex
@@ -22,7 +24,7 @@ build/
 
 .gradle
 local.properties
-.idea/workspace.xml
+gradle.properties
 
 # OSX files
 .DS_Store

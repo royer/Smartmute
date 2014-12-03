@@ -1,24 +1,29 @@
 package bangz.smartmute;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 
 import android.app.ActionBar;
-import android.app.FragmentManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
+import android.support.v4.app.FragmentManager;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.media.AudioManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
-import android.widget.Toast;
 
 
-public class RulelistActivity extends Activity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks {
 
+public class RulelistActivity extends FragmentActivity
+        implements NavigationDrawerFragment.NavigationDrawerCallbacks
+{
+
+
+    private static final String TAG = RulelistActivity.class.getSimpleName();
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
@@ -28,6 +33,7 @@ public class RulelistActivity extends Activity
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +49,8 @@ public class RulelistActivity extends Activity
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout));
 
+
+
 //        BroadcastReceiver ringReceive = new BroadcastReceiver() {
 //            @Override
 //            public void onReceive(Context context, Intent intent) {
@@ -57,7 +65,7 @@ public class RulelistActivity extends Activity
     @Override
     public void onCatalogItemSelected(int position) {
         // update the main content by replacing fragments
-        FragmentManager fragmentManager = getFragmentManager();
+        FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, RulelistFragment.newInstance(position + 1))
                 .commit();
@@ -97,8 +105,66 @@ public class RulelistActivity extends Activity
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             return true;
+        } else if (id == R.id.action_add) {
+            //TODO process action add new rule
+
+            DialogFragment chooseRuleTypeDialog = new ChooseRuleTypeDialogFragment();
+            chooseRuleTypeDialog.show(getSupportFragmentManager(), "ChooseRuleTypeDialog");
+            Log.d(TAG, "DIalog showed.");
+
+
+            //Intent intent = new Intent(this, WifiEditActivity.class);
+            //intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);
+            //startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
 
+
+
+    public static class ChooseRuleTypeDialogFragment extends DialogFragment {
+
+        public interface NoticeDialogListerner {
+            public void onItemSelected(DialogFragment dialog, int which);
+        }
+
+        NoticeDialogListerner mListerner ;
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle("What kind Rule ?")
+                    .setItems(R.array.rule_type, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            //mListerner.onItemSelected(ChooseRuleTypeDialogFragment.this, which);
+                            if (which == 0) {
+                                //TODO location
+                            } else if (which == 1) {
+                                //TODO time
+                            } else {
+                                Intent intent = new Intent(getActivity(), WifiEditActivity.class);
+                                intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);
+                                startActivity(intent);
+                            }
+
+                        }
+                    });
+
+
+            return builder.create();
+        }
+
+        @Override
+        public void onAttach(Activity activity) {
+            super.onAttach(activity);
+
+//            try {
+//                mListerner = (NoticeDialogListerner)activity ;
+//            } catch(ClassCastException e) {
+//                throw new ClassCastException(activity.toString() + " must implement NoticeDialogListerner");
+//            }
+        }
+
+    }
 }
