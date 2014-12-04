@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
+import android.app.DialogFragment;
+//import android.support.v4.app.DialogFragment;
+//import android.support.v4.app.FragmentActivity;
 
 import android.app.ActionBar;
-import android.support.v4.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,7 +18,7 @@ import android.support.v4.widget.DrawerLayout;
 
 
 
-public class RulelistActivity extends FragmentActivity
+public class RulelistActivity extends Activity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks
 {
 
@@ -65,7 +65,7 @@ public class RulelistActivity extends FragmentActivity
     @Override
     public void onCatalogItemSelected(int position) {
         // update the main content by replacing fragments
-        FragmentManager fragmentManager = getSupportFragmentManager();
+        android.app.FragmentManager fragmentManager = getFragmentManager();
         fragmentManager.beginTransaction()
                 .replace(R.id.container, RulelistFragment.newInstance(position + 1))
                 .commit();
@@ -109,7 +109,7 @@ public class RulelistActivity extends FragmentActivity
             //TODO process action add new rule
 
             DialogFragment chooseRuleTypeDialog = new ChooseRuleTypeDialogFragment();
-            chooseRuleTypeDialog.show(getSupportFragmentManager(), "ChooseRuleTypeDialog");
+            chooseRuleTypeDialog.show(getFragmentManager(), "ChooseRuleTypeDialog");
             Log.d(TAG, "DIalog showed.");
 
 

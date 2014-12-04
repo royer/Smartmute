@@ -1,18 +1,20 @@
 package bangz.smartmute;
 
 import android.app.Activity;
-import android.support.v4.app.LoaderManager;
+import android.app.LoaderManager;
 import android.content.Context;
-import android.support.v4.content.CursorLoader;
+
+import android.content.CursorLoader;
+import android.content.Loader;
 import android.database.Cursor;
-import android.support.v4.app.ListFragment;
+import android.app.ListFragment;
 import android.os.Bundle;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -22,7 +24,7 @@ import bangz.smartmute.content.RulesColumns;
  * A placeholder fragment containing a simple view.
  */
 public class RulelistFragment extends ListFragment
-    implements LoaderManager.LoaderCallbacks<Cursor> {
+    implements LoaderManager.LoaderCallbacks {
 
     private static final String TAG = "RulelistFragment";
     /**
@@ -137,21 +139,23 @@ public class RulelistFragment extends ListFragment
 
     }
 
+
     @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    public Loader onCreateLoader(int id, Bundle args) {
         String selection = new String();
         return new CursorLoader(getActivity(),RulesColumns.CONTENT_URI,PROJECTION, selection, null,null);
     }
 
     @Override
-    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        mAdapter.swapCursor(data);
+    public void onLoadFinished(Loader loader, Object data) {
+        mAdapter.swapCursor((Cursor)data);
     }
 
     @Override
-    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+    public void onLoaderReset(Loader loader) {
         mAdapter.swapCursor(null);
-
     }
+
+
 
 }
