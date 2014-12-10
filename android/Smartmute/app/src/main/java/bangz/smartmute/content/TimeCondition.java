@@ -32,6 +32,8 @@ public class TimeCondition extends Condition {
     public static final int IDX_FRIDAY = 5;
     public static final int IDX_SATURDAY = 6;
 
+    public static final int ALLDAYSSET = 0x7F;
+
     public TimeCondition() {
         setType(Condition.RT_TIME);
     }
@@ -126,5 +128,9 @@ public class TimeCondition extends Condition {
     }
     public int getWhichdays() {
         return whichdays;
+    }
+
+    public boolean isAllDaySet() {
+        return whichdays == ALLDAYSSET ;
     }
 }

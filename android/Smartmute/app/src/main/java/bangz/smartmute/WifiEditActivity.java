@@ -1,15 +1,18 @@
 package bangz.smartmute;
 
 import android.app.ActionBar;
+import android.app.Activity;
+import android.support.v7.app.ActionBarActivity;
+import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
+//import android.support.v4.app.LoaderManager;
+//import android.support.v4.content.CursorLoader;
+import android.content.Loader;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,12 +20,14 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 
+import com.bangz.lib.ui.donebar.DoneBarActivity;
+
 import bangz.smartmute.content.RulesColumns;
 import bangz.smartmute.content.WifiCondition;
 
 
-public class WifiEditActivity extends FragmentActivity
-implements LoaderManager.LoaderCallbacks<Cursor> {
+public class WifiEditActivity extends DoneBarActivity
+implements LoaderManager.LoaderCallbacks {
 
     private static final String TAG = WifiEditActivity.class.getSimpleName();
 
@@ -40,7 +45,8 @@ implements LoaderManager.LoaderCallbacks<Cursor> {
         RulesColumns.CONDITION,
         RulesColumns.SECONDCONDITION,
         RulesColumns.ACTIVATED,
-        RulesColumns.RINGMODE
+        RulesColumns.RINGMODE,
+        RulesColumns.DESCRIPTION
     };
 
     @Override
@@ -57,11 +63,12 @@ implements LoaderManager.LoaderCallbacks<Cursor> {
 
         if(mode == Constants.INTENT_EDIT) {
             mUri = intent.getData();
-            LoaderManager lm = getSupportLoaderManager();
+            LoaderManager lm = getLoaderManager();
             lm.initLoader(1,null,this);
 
         }
 
+        //TODO need remove this savebutton when finished Donebar
         Button saveButton = (Button)findViewById(R.id.SaveWifiRule);
         saveButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,6 +79,8 @@ implements LoaderManager.LoaderCallbacks<Cursor> {
 
         // set ringmode on RadioGroup
         RadioGroup radiogroup = (RadioGroup)findViewById(R.id.ringmode);
+
+        showDoneBar(true);
     }
 
 
@@ -95,16 +104,22 @@ implements LoaderManager.LoaderCallbacks<Cursor> {
     }
 
     @Override
-    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+    public Loader onCreateLoader(int id, Bundle args) {
         return new CursorLoader(this, mUri, PROJECTS,"",null,null);
     }
 
     @Override
-    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-        mCursor = data ;
-
+    public void onLoadFinished(android.content.Loader loader, Object data) {
+        mCursor = (Cursor)data;
         UpdateView();
     }
+
+    @Override
+    public void onLoaderReset(android.content.Loader loader) {
+        mCursor = null ;
+
+    }
+
 
     private void UpdateView() {
         if (mCursor == null) {
@@ -129,20 +144,14 @@ implements LoaderManager.LoaderCallbacks<Cursor> {
 
         RadioGroup radioGroup = (RadioGroup)findViewById(R.id.ringmode);
         int ringmode = mCursor.getInt(idxRingMode);
-        if (ringmode == RulesColumns.RM_NORMAL) {
-            radioGroup.check(R.id.sound);
-        } else if (ringmode == RulesColumns.RM_SILENT) {
-            radioGroup.check(R.id.slience);
+        if (ringmode == RulesColumns.RM_SILENT) {
+            radioGroup.check(R.id.silence);
         } else {
             radioGroup.check(R.id.vibrate);
         }
 
     }
 
-    @Override
-    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
-        mCursor = null ;
-    }
 
     private void saveToDatabase() {
         final EditText viewRuleName = (EditText)findViewById(R.id.WifiRuleName);
@@ -157,9 +166,7 @@ implements LoaderManager.LoaderCallbacks<Cursor> {
         RadioGroup radioGroup = (RadioGroup)findViewById(R.id.ringmode);
         int idRingMode = radioGroup.getCheckedRadioButtonId();
         int ringmode ;
-        if (idRingMode == R.id.sound) {
-            ringmode = RulesColumns.RM_NORMAL;
-        } else if (idRingMode == R.id.slience) {
+        if (idRingMode == R.id.silence) {
             ringmode = RulesColumns.RM_SILENT ;
         } else {
             ringmode = RulesColumns.RM_VIBRATE;

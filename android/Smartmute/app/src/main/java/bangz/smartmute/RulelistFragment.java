@@ -13,7 +13,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -26,12 +28,21 @@ import bangz.smartmute.content.RulesColumns;
 public class RulelistFragment extends ListFragment
     implements LoaderManager.LoaderCallbacks {
 
+
     private static final String TAG = "RulelistFragment";
+
+    public interface OnRuleItemClickListerner {
+        public void onRuleItemSelected(long id, int ruletype);
+    }
+    private OnRuleItemClickListerner mRuleItemSelectedListerner ;
+
     /**
      * The fragment argument representing the section number for this
      * fragment.
      */
     private static final String ARG_SECTION_NUMBER = "section_number";
+
+
 
     private SimpleCursorAdapter mAdapter ;
     private static final String[] PROJECTION = {RulesColumns._ID,
@@ -100,16 +111,12 @@ public class RulelistFragment extends ListFragment
 
                 v = (TextView)view.findViewById(R.id.Detail);
                 String descript = cursor.getString(idxDescrip);
-                if(ruletype == RulesColumns.RT_TIME || ruletype == RulesColumns.RT_WIFI) {
+                if (descript.isEmpty() == false) {
                     v.setText(descript);
                 } else {
-                    if (descript.isEmpty() == false) {
-                        v.setText(descript);
-                    } else {
-                        //TODO convert condition string to easy read text
-                        String strcondition = cursor.getString(idxCondition);
-                        v.setText(strcondition);
-                    }
+                    //TODO convert condition string to easy read text
+                    String strcondition = cursor.getString(idxCondition);
+                    v.setText(strcondition);
                 }
 
                 Switch ruleonoff = (Switch)view.findViewById(R.id.RuleOnOff);
@@ -119,8 +126,11 @@ public class RulelistFragment extends ListFragment
 
         };
 
+
+
         setListAdapter(mAdapter);
         LoaderManager lm = getLoaderManager();
+
         lm.initLoader(1, null, this);
     }
 
@@ -137,8 +147,20 @@ public class RulelistFragment extends ListFragment
         ((RulelistActivity) activity).onSectionAttached(
                 getArguments().getInt(ARG_SECTION_NUMBER));
 
+        try {
+            mRuleItemSelectedListerner = (OnRuleItemClickListerner) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnRuleItemClickListerner.");
+        }
+
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        mRuleItemSelectedListerner = null ;
+    }
 
     @Override
     public Loader onCreateLoader(int id, Bundle args) {
@@ -156,6 +178,16 @@ public class RulelistFragment extends ListFragment
         mAdapter.swapCursor(null);
     }
 
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+        Cursor cursor = mAdapter.getCursor();
+        cursor.moveToPosition(position);
+        long rowId = cursor.getLong(cursor.getColumnIndex(RulesColumns._ID));
+        int ruletype = cursor.getInt(cursor.getColumnIndex(RulesColumns.RULETYPE));
+        //Log.d(TAG,"Param id = " + id + " Get from cursor id = "+ rowId + " Ruletype = " + ruletype);
 
+        mRuleItemSelectedListerner.onRuleItemSelected(id, ruletype);
 
+    }
 }

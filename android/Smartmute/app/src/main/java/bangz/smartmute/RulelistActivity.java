@@ -3,23 +3,28 @@ package bangz.smartmute;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ContentUris;
 import android.content.DialogInterface;
 import android.app.DialogFragment;
 //import android.support.v4.app.DialogFragment;
 //import android.support.v4.app.FragmentActivity;
 
-import android.app.ActionBar;
+import android.support.v7.app.ActionBar;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.support.v4.widget.DrawerLayout;
 
+import bangz.smartmute.content.RulesColumns;
 
 
-public class RulelistActivity extends Activity
+public class RulelistActivity extends ActionBarActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks
+        , RulelistFragment.OnRuleItemClickListerner
 {
 
 
@@ -41,7 +46,7 @@ public class RulelistActivity extends Activity
         setContentView(R.layout.activity_rulelist);
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getFragmentManager().findFragmentById(R.id.navigation_drawer);
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
         mTitle = getTitle();
 
         // Set up the drawer.
@@ -77,9 +82,10 @@ public class RulelistActivity extends Activity
     }
 
     public void restoreActionBar() {
-        ActionBar actionBar = getActionBar();
+        ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
         actionBar.setTitle(mTitle);
     }
 
@@ -120,6 +126,25 @@ public class RulelistActivity extends Activity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onRuleItemSelected(long id, int ruletype) {
+        Uri uri = ContentUris.withAppendedId(RulesColumns.CONTENT_URI,id);
+        Intent intent = new Intent();
+        intent.setData(uri);
+        switch(ruletype) {
+            case RulesColumns.RT_LOCATION:
+                break;
+            case RulesColumns.RT_WIFI:
+                intent.setClass(this, WifiEditActivity.class);
+                intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_EDIT);
+                break;
+            case RulesColumns.RT_TIME:
+                intent.setClass(this, TimeRuleEditActivity.class);
+                intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_EDIT);
+                break;
+        }
+        startActivity(intent);
+    }
 
 
     public static class ChooseRuleTypeDialogFragment extends DialogFragment {
@@ -141,7 +166,9 @@ public class RulelistActivity extends Activity
                             if (which == 0) {
                                 //TODO location
                             } else if (which == 1) {
-                                //TODO time
+                                Intent intent = new Intent(getActivity(), TimeRuleEditActivity.class);
+                                intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);
+                                startActivity(intent);
                             } else {
                                 Intent intent = new Intent(getActivity(), WifiEditActivity.class);
                                 intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);

@@ -70,16 +70,11 @@
         <RadioButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/slience"
+            android:id="@+id/silence"
+            android:layout_weight="1"
             android:layout_marginLeft="20dp"
             android:text="@string/slience"/>
 
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/sound"
-            android:layout_marginLeft="20dp"
-            android:text="@string/sound"/>
 
     </RadioGroup>
 
