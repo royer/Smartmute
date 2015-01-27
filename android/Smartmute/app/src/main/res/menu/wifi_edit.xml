@@ -1,6 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="bangz.smartmute.WifiEditActivity" >
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="bangz.smartmute.WifiEditActivity">
     <!--
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
@@ -8,11 +9,11 @@
         android:showAsAction="never" />
         -->
     <item android:id="@+id/action_done"
-        android:title="DONE"
+        android:title="@string/done"
         android:orderInCategory="100"
-        android:showAsAction="always"/>
+        app:showAsAction="always"/>
     <item android:id="@+id/action_cancel"
-        android:title="CANCEL"
+        android:title="@string/cancel"
         android:orderInCategory="100"
-        android:showAsAction="always|withText"/>
+        app:showAsAction="always|withText"/>
 </menu>

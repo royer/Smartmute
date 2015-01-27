@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2014 Royer Wang. All rights reserved.
  *
@@ -15,18 +14,35 @@
  *  limitations under the License.
  */
 
-package bangz.smartmute;
+package bangz.smartmute.util;
+
+import android.os.Build;
 
 /**
- * Created by royerwang on 2014-11-19.
+ * A Factory to get the {@link ApiAdapter} for current device
+ *
+ * Created by royerwang on 14-12-24.
  */
-public class Constants {
+public class ApiAdapterFactory {
 
-    public static final String PACKAGE_NAME = "bangz.smartmute";
+    private static ApiAdapter apiAdapter ;
 
-    public static final String INTENT_EDITORNEW = PACKAGE_NAME + ".edit_or_new";
-    public static final int INTENT_EDIT = 0;
-    public static final int INTENT_NEW = 1;
+    /**
+     * get the {@link ApiAdapter}
+     * @return ApiAdapter
+     */
+    public static ApiAdapter getApiAdapter() {
 
-    private Constants() {}
+        if (apiAdapter == null) {
+
+            if (Build.VERSION.SDK_INT >= 19) {
+                apiAdapter = new ApiAdapter19();
+            } else {
+                apiAdapter = new ApiAdapter15();
+            }
+        }
+
+        return apiAdapter ;
+    }
+
 }

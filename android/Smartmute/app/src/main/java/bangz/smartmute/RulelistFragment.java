@@ -1,14 +1,36 @@
+
+/*
+ * Copyright (c) 2014 Royer Wang. All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package bangz.smartmute;
 
 import android.app.Activity;
-import android.app.LoaderManager;
+import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.support.v4.app.LoaderManager;
 import android.content.Context;
 
-import android.content.CursorLoader;
-import android.content.Loader;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.database.Cursor;
-import android.app.ListFragment;
+import android.support.v4.app.ListFragment;
 import android.os.Bundle;
+import android.support.v7.widget.SwitchCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,23 +38,28 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import bangz.smartmute.content.RulesColumns;
+import bangz.smartmute.services.TimeRuleAlarmService;
+import bangz.smartmute.util.LogUtils;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class RulelistFragment extends ListFragment
-    implements LoaderManager.LoaderCallbacks {
+    implements LoaderManager.LoaderCallbacks,
+    RulelistAdapter.ActivedButtonListener {
 
 
     private static final String TAG = "RulelistFragment";
 
+
     public interface OnRuleItemClickListerner {
         public void onRuleItemSelected(long id, int ruletype);
+        //public void onEnableRuleItem(long id, boolean enabled);
     }
     private OnRuleItemClickListerner mRuleItemSelectedListerner ;
 
@@ -44,7 +71,7 @@ public class RulelistFragment extends ListFragment
 
 
 
-    private SimpleCursorAdapter mAdapter ;
+    private RulelistAdapter mAdapter ;
     private static final String[] PROJECTION = {RulesColumns._ID,
             RulesColumns.NAME,
             RulesColumns.ACTIVATED,
@@ -74,57 +101,8 @@ public class RulelistFragment extends ListFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Initialize CursorAdapter
-        String[] columns = {
-                RulesColumns.RULETYPE,
-                RulesColumns.NAME,
-                RulesColumns.DESCRIPTION,
-                RulesColumns.ACTIVATED
-        };
-        int [] listitemids = {R.id.RuleIcon,R.id.RuleName,R.id.Detail,R.id.RuleOnOff};
 
-        mAdapter = new SimpleCursorAdapter(getActivity(),
-                R.layout.rulelist_item,null,columns,listitemids,0
-        ) {
-            @Override
-            public void bindView(View view, Context context, Cursor cursor) {
-                int idxName = cursor.getColumnIndex(RulesColumns.NAME);
-                int idxRuleType = cursor.getColumnIndex(RulesColumns.RULETYPE);
-                int idxCondition = cursor.getColumnIndex(RulesColumns.CONDITION);
-                int idxSecondCondition = cursor.getColumnIndex(RulesColumns.SECONDCONDITION);
-                int idxActivited = cursor.getColumnIndex(RulesColumns.ACTIVATED);
-                int idxDescrip = cursor.getColumnIndex(RulesColumns.DESCRIPTION);
-
-                String name = cursor.getString(idxName);
-                TextView v = (TextView)view.findViewById(R.id.RuleName);
-                v.setText(name);
-
-                int[] ruletypeiconids = {
-                        0,
-                        R.drawable.ic_location,
-                        R.drawable.ic_wifi,
-                        R.drawable.ic_clock};
-                int ruletype = cursor.getInt(idxRuleType);
-                Log.d(TAG, "RULETYPE = "+ruletype);
-                ImageView imgv = (ImageView)view.findViewById(R.id.RuleIcon);
-                imgv.setImageResource(ruletypeiconids[ruletype]);
-
-                v = (TextView)view.findViewById(R.id.Detail);
-                String descript = cursor.getString(idxDescrip);
-                if (descript.isEmpty() == false) {
-                    v.setText(descript);
-                } else {
-                    //TODO convert condition string to easy read text
-                    String strcondition = cursor.getString(idxCondition);
-                    v.setText(strcondition);
-                }
-
-                Switch ruleonoff = (Switch)view.findViewById(R.id.RuleOnOff);
-                int activeted = cursor.getInt(idxActivited);
-                ruleonoff.setChecked(activeted != 0);
-            }
-
-        };
+        mAdapter = new RulelistAdapter(getActivity(),this);
 
 
 
@@ -168,6 +146,8 @@ public class RulelistFragment extends ListFragment
         return new CursorLoader(getActivity(),RulesColumns.CONTENT_URI,PROJECTION, selection, null,null);
     }
 
+
+
     @Override
     public void onLoadFinished(Loader loader, Object data) {
         mAdapter.swapCursor((Cursor)data);
@@ -175,6 +155,7 @@ public class RulelistFragment extends ListFragment
 
     @Override
     public void onLoaderReset(Loader loader) {
+
         mAdapter.swapCursor(null);
     }
 
@@ -190,4 +171,39 @@ public class RulelistFragment extends ListFragment
         mRuleItemSelectedListerner.onRuleItemSelected(id, ruletype);
 
     }
+
+    @Override
+    public void onActivedButtonClick(long id, boolean bActivited) {
+        //Cursor cursor = mAdapter.getCursor();
+
+        LogUtils.LOGD(TAG,"Activited Button clicked. id: " + id + " Activited: " + bActivited);
+
+        ContentResolver cr = getActivity().getContentResolver();
+        Uri uri = ContentUris.withAppendedId(RulesColumns.CONTENT_URI,id);
+
+        String[] projects = {
+          RulesColumns.RULETYPE
+
+        };
+        Cursor cursor = cr.query(uri,projects,null,null,null);
+        cursor.moveToFirst();
+        int ruletype = cursor.getInt(cursor.getColumnIndex(RulesColumns.RULETYPE));
+
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(RulesColumns.ACTIVATED, bActivited?1:0);
+        cr.update(uri,contentValues,null,null);
+
+        mAdapter.notifyDataSetChanged();
+
+        if (ruletype == RulesColumns.RT_TIME) {
+            if (bActivited == false)
+                TimeRuleAlarmService.cancelScheduledAlarm(getActivity(), uri);
+            else
+                TimeRuleAlarmService.startScheduleAlarm(getActivity(),uri);
+        } else if (ruletype == RulesColumns.RT_LOCATION) {
+            //TODO cancel location mute
+        }
+    }
+
 }

@@ -1,10 +1,33 @@
+
+/*
+ * Copyright (c) 2014 Royer Wang. All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package bangz.smartmute.content;
 
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import bangz.smartmute.util.MyTimeUtils;
 
 /**
  * Created by royerwang on 2014-09-23.
@@ -33,6 +56,33 @@ public class TimeCondition extends Condition {
     public static final int IDX_SATURDAY = 6;
 
     public static final int ALLDAYSSET = 0x7F;
+
+
+    private static final int[] MAP_CALENDARDAYOFWEEK = {
+        Calendar.SUNDAY,
+            Calendar.MONDAY,
+            Calendar.TUESDAY,
+            Calendar.WEDNESDAY,
+            Calendar.THURSDAY,
+            Calendar.FRIDAY,
+            Calendar.SATURDAY
+    };
+
+    public static int getCalendarDayofWeekfromIdxDay(int idxday) {
+        if (idxday < IDX_SUNDAY || idxday > IDX_SATURDAY)
+            throw new ArrayIndexOutOfBoundsException();
+        return MAP_CALENDARDAYOFWEEK[idxday];
+    }
+
+    public static int getIdxDayfromCalendarDayOfWeek(int calendarday) {
+
+        int i ;
+        for ( i = IDX_SUNDAY;i<=IDX_SATURDAY; i++)
+            if (MAP_CALENDARDAYOFWEEK[i] == calendarday)
+                return i;
+
+        return -1;
+    }
 
     public TimeCondition() {
         setType(Condition.RT_TIME);
@@ -118,6 +168,50 @@ public class TimeCondition extends Condition {
     public boolean isEnableOnThisDay(int whichday) {
 
         return (whichdays & (1 << whichday)) != 0;
+    }
+
+    public boolean isEnableToday(final Calendar today) {
+        int thedayofweek = today.get(Calendar.DAY_OF_WEEK);
+
+        int whichday = getIdxDayfromCalendarDayOfWeek(thedayofweek);
+
+        return isEnableOnThisDay(whichday);
+    }
+
+
+    public Calendar getNextMuteTime(final Calendar currenttime) {
+
+        Calendar startmutetime = MyTimeUtils.convertSqlTimeToCalendar(begin);
+
+        int hour = startmutetime.get(Calendar.HOUR_OF_DAY);
+        int minute = startmutetime.get(Calendar.MINUTE);
+
+        Calendar creturn = (Calendar)currenttime.clone();
+        creturn.set(Calendar.HOUR_OF_DAY, hour);
+        creturn.set(Calendar.MINUTE, minute);
+        creturn.set(Calendar.SECOND, 0);
+
+        if (isEnableToday(currenttime) && currenttime.before(creturn)) {
+
+            return creturn ;
+        }
+
+        creturn.add(Calendar.DATE, 1);
+        int idx_search = getIdxDayfromCalendarDayOfWeek(creturn.get(Calendar.DAY_OF_WEEK)) ;
+        int searcheddays = 0;
+        while(searcheddays < 7) {
+            if (isEnableOnThisDay(idx_search)) {
+                return creturn ;
+            }
+            creturn.add(Calendar.DATE, 1);
+            idx_search = getIdxDayfromCalendarDayOfWeek(creturn.get(Calendar.DAY_OF_WEEK));
+            searcheddays++;
+        }
+
+        return null ;
+
+
+
     }
 
     public Time getBegin() {

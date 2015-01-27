@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="bangz.smartmute" >
 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
@@ -32,6 +34,26 @@
             android:name=".TimeRuleEditActivity"
             android:label="@string/title_activity_time_rule" >
         </activity>
+
+        <service
+            android:name=".services.TimeRuleAlarmService"
+            android:exported="false" >
+        </service>
+
+        <service
+            android:name=".services.WifiMuteService"
+            android:exported="false" >
+        </service>
+
+        <receiver
+            android:name=".WifiReceiver"
+            android:enabled="true"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="android.net.wifi.STATE_CHANGE" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

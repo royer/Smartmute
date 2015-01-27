@@ -51,5 +51,9 @@
     <string name="thursday_3_abbreviation">THU</string>
     <string name="friday_3_abbreviation">FRI</string>
     <string name="saturday_3_abbreviation">SAT</string>
+    <string name="edit_name_hint">Name</string>
+    <string name="edit_description_hint">Description</string>
+    <string name="alldays">All Days</string>
+    <string name="activited_label">Activited</string>
 
 </resources>

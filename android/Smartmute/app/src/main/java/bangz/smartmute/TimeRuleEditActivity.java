@@ -1,11 +1,30 @@
+
+/*
+ * Copyright (c) 2014 Royer Wang. All rights reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package bangz.smartmute;
 
 import android.app.Activity;
-import android.app.LoaderManager;
+import android.app.PendingIntent;
+import android.content.ContentUris;
+import android.support.v4.app.LoaderManager;
 import android.content.ContentValues;
-import android.content.CursorLoader;
+import android.support.v4.content.CursorLoader;
 import android.content.Intent;
-import android.content.Loader;
+import android.support.v4.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +36,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.ToggleButton;
 
 import com.bangz.lib.ui.donebar.DoneBarActivity;
@@ -25,6 +45,8 @@ import java.sql.Time;
 
 import bangz.smartmute.content.RulesColumns;
 import bangz.smartmute.content.TimeCondition;
+import bangz.smartmute.services.TimeRuleAlarmService;
+import bangz.smartmute.util.LogUtils;
 
 
 public class TimeRuleEditActivity extends DoneBarActivity
@@ -62,7 +84,7 @@ public class TimeRuleEditActivity extends DoneBarActivity
 
         if (mode == Constants.INTENT_EDIT) {
             mUri = intent.getData();
-            LoaderManager lm = getLoaderManager();
+            LoaderManager lm = getSupportLoaderManager();
             lm.initLoader(1, null, this);
         }
 
@@ -79,8 +101,18 @@ public class TimeRuleEditActivity extends DoneBarActivity
 
     }
 
+    @Override
+    public void onDoneButtonClicked() {
+        saveToDatabase();
+        finish();
+    }
 
-//    @Override
+    @Override
+    public void onCancelButtonClicked() {
+        finish();
+    }
+
+    //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {
 //        // Inflate the menu; this adds items to the action bar if it is present.
 //        getMenuInflater().inflate(R.menu.time_rule, menu);
@@ -109,6 +141,7 @@ public class TimeRuleEditActivity extends DoneBarActivity
         int idxCondition = mCursor.getColumnIndex(RulesColumns.CONDITION);
         int idxDescription = mCursor.getColumnIndex(RulesColumns.DESCRIPTION);
         int idxRingMode = mCursor.getColumnIndex(RulesColumns.RINGMODE);
+        int idxActivited = mCursor.getColumnIndex(RulesColumns.ACTIVATED);
 
         String strname = mCursor.getString(idxName);
         final EditText editName = (EditText)findViewById(R.id.TimeRuleName);
@@ -135,6 +168,9 @@ public class TimeRuleEditActivity extends DoneBarActivity
         editStartTime.setText(strStartTime);
         EditText editEndTime = (EditText)findViewById(R.id.editEndTime);
         editEndTime.setText(strEndTime);
+
+        Switch btnSwitch = (Switch)findViewById(R.id.Activited);
+        btnSwitch.setChecked(mCursor.getInt(idxActivited) != 0);
 
         if(timeCondition.isAllDaySet()) {
             CheckBox chkAllDays = (CheckBox)findViewById(R.id.chkAllDays);
@@ -173,6 +209,9 @@ public class TimeRuleEditActivity extends DoneBarActivity
         final EditText editEndTime = (EditText)findViewById(R.id.editEndTime);
         String strEndTime = editEndTime.getText().toString();
 
+        final Switch btnActivited = (Switch)findViewById(R.id.Activited);
+        int activited = btnActivited.isChecked() ? 1:0;
+
         RadioGroup radioGroup = (RadioGroup)findViewById(R.id.ringmode);
         int idRingMode = radioGroup.getCheckedRadioButtonId();
         int ringmode ;
@@ -208,11 +247,12 @@ public class TimeRuleEditActivity extends DoneBarActivity
 
         String strCondition ;
         strCondition = String.format("time: %s, %s, %s", strStartTime, strEndTime, strWhichDays);
+        long recordid = 0;
 
         if (mode == Constants.INTENT_NEW) {
             ContentValues values = new ContentValues();
             values.put(RulesColumns.NAME, strName);
-            values.put(RulesColumns.ACTIVATED, 1);
+            values.put(RulesColumns.ACTIVATED, activited);
             values.put(RulesColumns.RULETYPE, RulesColumns.RT_TIME);
             values.put(RulesColumns.RINGMODE, ringmode);
             values.put(RulesColumns.CONDITION, strCondition);
@@ -224,10 +264,21 @@ public class TimeRuleEditActivity extends DoneBarActivity
         } else {
             ContentValues values = new ContentValues();
             values.put(RulesColumns.NAME, strName);
+            values.put(RulesColumns.ACTIVATED, activited);
             values.put(RulesColumns.CONDITION, strCondition);
             values.put(RulesColumns.RINGMODE,ringmode);
+            values.put(RulesColumns.DESCRIPTION, strDescript);
             getContentResolver().update(mUri, values, null, null);
 
+
+        }
+
+        recordid = ContentUris.parseId(mUri);
+
+        if (activited != 0) {
+            TimeRuleAlarmService.startScheduleAlarm(this, mUri);
+        } else {
+            TimeRuleAlarmService.cancelScheduledAlarm(this, mUri);
         }
 
         bModified = false;

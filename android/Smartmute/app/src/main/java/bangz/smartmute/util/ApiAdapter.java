@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2014 Royer Wang. All rights reserved.
  *
@@ -15,18 +14,24 @@
  *  limitations under the License.
  */
 
-package bangz.smartmute;
+package bangz.smartmute.util;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 
 /**
- * Created by royerwang on 2014-11-19.
+ * Created by royerwang on 14-12-24.
  */
-public class Constants {
+public interface ApiAdapter {
 
-    public static final String PACKAGE_NAME = "bangz.smartmute";
-
-    public static final String INTENT_EDITORNEW = PACKAGE_NAME + ".edit_or_new";
-    public static final int INTENT_EDIT = 0;
-    public static final int INTENT_NEW = 1;
-
-    private Constants() {}
+    /**
+     * Wrap {@link AlarmManager#set} method, Because after API19, must use
+     * {@link AlarmManager#setExact} method to set exact alarm, do not use {@link AlarmManager#set}
+     * method.
+     * @param am {@link android.app.AlarmManager}
+     * @param type
+     * @param triggerAtMillis
+     * @param operation
+     */
+    public void setExactAlarm(final AlarmManager am, int type, long triggerAtMillis, PendingIntent operation);
 }

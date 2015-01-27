@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/TimeRuleName"
-        android:hint="Name"
+        android:hint="@string/edit_name_hint"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/TimeRuleDescription"
-        android:hint="Description"
+        android:hint="@string/edit_description_hint"
         android:layout_below="@+id/TimeRuleName"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
@@ -46,7 +46,8 @@
         android:ems="5"
         android:id="@+id/editStartTime"
         android:layout_below="@+id/TimeRuleDescription"
-        android:layout_toRightOf="@+id/label_start" />
+        android:layout_toRightOf="@+id/label_start"
+        android:layout_toEndOf="@+id/label_start"/>
 
     <TextView
         android:layout_width="wrap_content"
@@ -71,7 +72,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/chkAllDays"
-        android:text="All Days"
+        android:text="@string/alldays"
         android:layout_below="@+id/editEndTime"
         android:layout_alignParentLeft="true"/>
 
@@ -191,6 +192,16 @@
 
     </RadioGroup>
 
+    <Switch
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/activited_label"
+        android:id="@+id/Activited"
+        android:layout_below="@+id/ringmode"
+        android:layout_alignLeft="@+id/ringmode"
+        android:layout_alignStart="@+id/ringmode"
+        android:checked="true" />
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -198,6 +209,7 @@
         android:id="@+id/btnSaveTimeRule"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
+
 
 
 </RelativeLayout>

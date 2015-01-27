@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2014 Royer Wang. All rights reserved.
  *
@@ -18,15 +17,11 @@
 package bangz.smartmute;
 
 /**
- * Created by royerwang on 2014-11-19.
+ * Created by royerwang on 14-12-29.
  */
-public class Constants {
+public class Config {
 
-    public static final String PACKAGE_NAME = "bangz.smartmute";
+    public static final boolean IS_TEST_BUILD = false;
 
-    public static final String INTENT_EDITORNEW = PACKAGE_NAME + ".edit_or_new";
-    public static final int INTENT_EDIT = 0;
-    public static final int INTENT_NEW = 1;
-
-    private Constants() {}
+    private Config() {}
 }

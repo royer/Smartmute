@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2014 Royer Wang. All rights reserved.
  *
@@ -15,18 +14,30 @@
  *  limitations under the License.
  */
 
-package bangz.smartmute;
+package bangz.smartmute.test;
+
+import android.test.suitebuilder.annotation.SmallTest;
+
+import junit.framework.TestCase;
+
+import java.sql.Time;
+import java.util.Calendar;
+
+import bangz.smartmute.util.MyTimeUtils;
 
 /**
- * Created by royerwang on 2014-11-19.
+ * Created by royerwang on 14-12-18.
  */
-public class Constants {
+public class MyTimeUtilsTest extends TestCase {
 
-    public static final String PACKAGE_NAME = "bangz.smartmute";
+    @SmallTest
+    public void testConvertSqlTimeToCalendar() {
 
-    public static final String INTENT_EDITORNEW = PACKAGE_NAME + ".edit_or_new";
-    public static final int INTENT_EDIT = 0;
-    public static final int INTENT_NEW = 1;
+        Time time = Time.valueOf("11:23:15");
 
-    private Constants() {}
+        Calendar c = MyTimeUtils.convertSqlTimeToCalendar(time);
+        assertEquals(11,c.get(Calendar.HOUR_OF_DAY));
+        assertEquals(23, c.get(Calendar.MINUTE));
+
+    }
 }

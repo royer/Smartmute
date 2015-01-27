@@ -1,8 +1,12 @@
 package bangz.smartmute.test;
 
 import android.test.suitebuilder.annotation.SmallTest;
+import android.util.Log;
 
 import junit.framework.TestCase;
+
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import bangz.smartmute.content.Condition;
 import bangz.smartmute.content.ConditionFactory;
@@ -91,6 +95,10 @@ public class ConditionTest extends TestCase {
     @SmallTest
     public void testTimeCondition() {
 
+        String strttt = "\"test\"";
+        strttt = strttt.replaceAll("[\\^\\\"\\\"\\$]","");
+        assertEquals(strttt,"test");
+
         String strwhichday = "1001111";
 
         assertEquals(Integer.parseInt("1111001",2), TimeCondition.parseWhichdayString(strwhichday));
@@ -114,6 +122,64 @@ public class ConditionTest extends TestCase {
         assertEquals(true, condition.isEnableOnThisDay(TimeCondition.IDX_FRIDAY));
         assertEquals(false, condition.isEnableOnThisDay(TimeCondition.IDX_SATURDAY));
 
+        Calendar testtoday = new GregorianCalendar(2014,Calendar.DECEMBER,22);
+        assertEquals(Calendar.MONDAY,testtoday.get(Calendar.DAY_OF_WEEK));
+        assertEquals(true, condition.isEnableToday(testtoday));
+
+        testtoday.add(Calendar.DAY_OF_YEAR,1); //Tuesday
+        assertEquals(Calendar.TUESDAY,testtoday.get(Calendar.DAY_OF_WEEK));
+        assertEquals(false, condition.isEnableToday(testtoday));
+
+        testtoday.add(Calendar.DATE, 1); //Wednesday
+        assertEquals(Calendar.WEDNESDAY,testtoday.get(Calendar.DAY_OF_WEEK));
+        assertEquals(false, condition.isEnableToday(testtoday));
+
+        testtoday.add(Calendar.DATE, 1);//THURSDAY
+        assertEquals(Calendar.THURSDAY,testtoday.get(Calendar.DAY_OF_WEEK));
+        assertEquals(true, condition.isEnableToday(testtoday));
+
+        testtoday.add(Calendar.DATE, 1);//FRIDAY
+        assertEquals(Calendar.FRIDAY, testtoday.get(Calendar.DAY_OF_WEEK));
+        assertEquals(true, condition.isEnableToday(testtoday));
+
+        testtoday.add(Calendar.DATE, 1);//SATURDAY
+        assertEquals(Calendar.SATURDAY,testtoday.get(Calendar.DAY_OF_WEEK));
+        assertEquals(false, condition.isEnableToday(testtoday));
+
+
+        // Start testgetNextMuteTime
+        testtoday.set(2014,Calendar.DECEMBER,21,13,23,59);
+        Calendar nextday = new GregorianCalendar(2014,Calendar.DECEMBER,22,23,00);
+        Calendar cr = condition.getNextMuteTime(testtoday);
+        assertEquals(0, cr.compareTo(nextday));
+
+        testtoday.set(2014, Calendar.DECEMBER, 22, 13, 23,22);
+        nextday.set(2014,Calendar.DECEMBER,22,23,00);
+        cr = condition.getNextMuteTime(testtoday);
+        assertEquals(0, cr.compareTo(nextday));
+
+        testtoday.set(2014,Calendar.DECEMBER,22,23,14,33);
+        nextday.set(2014,Calendar.DECEMBER,25,23,00);
+        cr = condition.getNextMuteTime(testtoday);
+        assertEquals(0, cr.compareTo(nextday));
+
+        testtoday.set(2014,Calendar.DECEMBER,23,22,59);
+        cr = condition.getNextMuteTime(testtoday);
+        assertEquals(0, cr.compareTo(nextday));
+
+        testtoday.set(2014,Calendar.DECEMBER,26,13,22);
+        nextday.set(2014,Calendar.DECEMBER,26,23,00);
+        cr = condition.getNextMuteTime(testtoday);
+        assertEquals(0, cr.compareTo(nextday));
+
+        testtoday.set(2014,Calendar.DECEMBER,27,22,59);
+        nextday.set(2014, Calendar.DECEMBER,29,23,00);
+        cr = condition.getNextMuteTime(testtoday);
+        assertEquals(0, cr.compareTo(nextday));
+
+        condition = (TimeCondition)ConditionFactory.CreateCondition("time: 23:00, 7:15, 0000000");
+        cr = condition.getNextMuteTime(testtoday);
+        assertEquals(null,cr);
 
     }
 
