@@ -37,7 +37,7 @@ public abstract class DoneBarActivity extends ActionBarActivity {
      * @param cancelId
      * @return
      */
-    protected View createCustomDoneCancelView(int layout, int doneId, int cancelId) {
+    protected final View createCustomDoneCancelView(int layout, int doneId, int cancelId) {
 
         final LayoutInflater inflater = (LayoutInflater)getSupportActionBar().
                 getThemedContext().getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -62,7 +62,7 @@ public abstract class DoneBarActivity extends ActionBarActivity {
     /**
      * create only Done button bar
      */
-    protected View createCustomDoneView(int layout, int doneId) {
+    protected final View createCustomDoneView(int layout, int doneId) {
 
         final LayoutInflater inflater = (LayoutInflater)getSupportActionBar().
                 getThemedContext().getSystemService(LAYOUT_INFLATER_SERVICE);
@@ -113,14 +113,14 @@ public abstract class DoneBarActivity extends ActionBarActivity {
         return R.id.actionbar_cancel;
     }
 
-    public void showDoneCancelBar(boolean bShow) {
+    public final void showDoneCancelBar(boolean bShow) {
         showBar(viewDoneCancelView, bShow);
     }
-    public void showDoneBar(boolean bShow) {
+    public final void showDoneBar(boolean bShow) {
         showBar(viewDoneBarView, bShow);
     }
 
-    private void showBar(View view, boolean bShow) {
+    private final void showBar(View view, boolean bShow) {
 
         final ActionBar actionBar = getSupportActionBar() ;
         if (bShow) {
