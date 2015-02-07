@@ -41,6 +41,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
+    <!-- If have time, use custom SeekBar to replace this RadioGroup -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -50,7 +51,6 @@
         android:layout_marginTop="7dp"
         android:text="@string/ringmode"/>
 
-    <!-- If have time, use custom SeekBar to replace this RadioGroup -->
     <RadioGroup
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -78,14 +78,13 @@
 
     </RadioGroup>
 
-    <Button
+    <Switch
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text = "@string/label_save"
-        android:id="@+id/SaveWifiRule"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-
+        android:id="@+id/Activited"
+        android:layout_below="@+id/ringmode"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="false" />
 
 
 </RelativeLayout>

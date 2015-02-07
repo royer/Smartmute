@@ -274,7 +274,7 @@ public class NavigationDrawerFragment extends Fragment {
         }
 
         if (item.getItemId() == R.id.action_add) {
-            Toast.makeText(getActivity(), "Add new rule.", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getActivity(), "Add new rule.", Toast.LENGTH_SHORT).show();
             return true;
         }
 

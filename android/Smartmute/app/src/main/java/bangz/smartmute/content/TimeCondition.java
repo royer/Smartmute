@@ -34,7 +34,7 @@ import bangz.smartmute.util.MyTimeUtils;
  */
 public class TimeCondition extends Condition {
 
-    public static final String TAG = TimeCondition.class.getSimpleName();
+    private static final String TAG = TimeCondition.class.getSimpleName();
 
     public static final String strMatch =
             "(?i)\\s*time\\s*:\\s*((?:0?[0-9]|1[0-9]|2[0-3]):[0-5][0-9])\\s*,\\s*" +

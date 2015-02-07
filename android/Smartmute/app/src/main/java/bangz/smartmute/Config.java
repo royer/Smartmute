@@ -21,7 +21,7 @@ package bangz.smartmute;
  */
 public class Config {
 
-    public static final boolean IS_TEST_BUILD = false;
+    public static final boolean TEST_BUILD = false;
 
     private Config() {}
 }

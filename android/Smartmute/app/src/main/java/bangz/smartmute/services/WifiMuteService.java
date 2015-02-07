@@ -96,13 +96,10 @@ public class WifiMuteService extends IntentService {
     }
 
     private void handleWifiConnected(String ssid) {
-        String lastwifi = PrefUtils.getLastWifiSsid(this);
 
         // remove quotation
         ssid = ssid.replaceAll("[\\^\\\"\\\"\\$]","");
 
-        if (ssid.equals(lastwifi))
-            return ;
 
         if (PrefUtils.isEnableSmartMute(this) == false) {
             LogUtils.LOGD(TAG, "Smart Mute is disabled, do nothing.");

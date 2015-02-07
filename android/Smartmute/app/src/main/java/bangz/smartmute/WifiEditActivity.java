@@ -17,99 +17,69 @@
 
 package bangz.smartmute;
 
-import android.app.ActionBar;
-import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v4.app.LoaderManager;
 import android.content.ContentValues;
-import android.support.v4.content.CursorLoader;
-import android.content.Intent;
+import android.content.Context;
 import android.database.Cursor;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 //import android.support.v4.app.LoaderManager;
 //import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioGroup;
-
-import com.bangz.lib.ui.donebar.DoneBarActivity;
+import android.widget.Switch;
+import android.widget.Toast;
 
 import bangz.smartmute.content.RulesColumns;
 import bangz.smartmute.content.WifiCondition;
+import bangz.smartmute.services.WifiMuteService;
 
 
-public class WifiEditActivity extends DoneBarActivity
-implements LoaderManager.LoaderCallbacks {
+public class WifiEditActivity extends RuleEditActivity {
 
     private static final String TAG = WifiEditActivity.class.getSimpleName();
 
-    private int mode ;
+    /**
+     * The last rule name read from database
+     */
+    private String strName ;
+    private String strSSID;
+    private boolean bActivited ;
+    private int    mRingMode ;
 
-    private Uri mUri;
-    private Cursor mCursor ;
-    private boolean bModified = false ;
+    private EditText    mEditName ;
+    private EditText    mEditSSID;
+    private Switch      mSwitchActivited;
 
+    private RadioGroup mViewRingMode;
 
-    private static final String[] PROJECTS = new String[] {
-        RulesColumns._ID,
-        RulesColumns.NAME,
-        RulesColumns.RULETYPE,
-        RulesColumns.CONDITION,
-        RulesColumns.SECONDCONDITION,
-        RulesColumns.ACTIVATED,
-        RulesColumns.RINGMODE,
-        RulesColumns.DESCRIPTION
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_wifi_edit);
 
-        //ActionBar actionBar = getActionBar();
-        //actionBar.setDisplayHomeAsUpEnabled(true);
-        //actionBar.setHomeButtonEnabled(true);
+        mEditName = (EditText)findViewById(R.id.WifiRuleName);
+        mEditSSID = (EditText)findViewById(R.id.SSID);
+        mSwitchActivited = (Switch)findViewById(R.id.Activited);
 
-        Intent intent = getIntent();
-        mode = intent.getIntExtra(Constants.INTENT_EDITORNEW,Constants.INTENT_NEW);
+        mViewRingMode = (RadioGroup)findViewById(R.id.ringmode);
 
-        if(mode == Constants.INTENT_EDIT) {
-            mUri = intent.getData();
-            LoaderManager lm = getSupportLoaderManager();
-            lm.initLoader(1,null,this);
 
+        if (savedInstanceState == null) {
+            strName = "";
+            strSSID = "";
+            bActivited = false;
+            mRingMode = RulesColumns.RM_NORMAL ;
+            mSwitchActivited.setChecked(true);
         }
 
-        //TODO need remove this savebutton when finished Donebar
-        Button saveButton = (Button)findViewById(R.id.SaveWifiRule);
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveToDatabase();
-            }
-        });
-
-        // set ringmode on RadioGroup
-        RadioGroup radiogroup = (RadioGroup)findViewById(R.id.ringmode);
-
-        showDoneCancelBar(true);
     }
 
-    @Override
-    public void onDoneButtonClicked() {
-        saveToDatabase();
-        finish();
-    }
-
-    @Override
-    public void onCancelButtonClicked() {
-        finish();
-    }
 //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {
 //        // Inflate the menu; this adds items to the action bar if it is present.
@@ -129,98 +99,136 @@ implements LoaderManager.LoaderCallbacks {
 //        return super.onOptionsItemSelected(item);
 //    }
 
-    @Override
-    public Loader onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(this, mUri, PROJECTS,"",null,null);
+    private int getRingMode() {
+        int idringmode = mViewRingMode.getCheckedRadioButtonId() ;
+        if (idringmode == R.id.silence)
+            return RulesColumns.RM_SILENT ;
+        else if (idringmode == R.id.vibrate)
+            return RulesColumns.RM_VIBRATE ;
+        else
+            return RulesColumns.RM_NORMAL ;
+    }
+
+    private void setRingMode(int ringmode) {
+        if (ringmode == RulesColumns.RM_SILENT)
+            mViewRingMode.check(R.id.silence);
+        else if (ringmode == RulesColumns.RM_VIBRATE)
+            mViewRingMode.check(R.id.vibrate);
     }
 
     @Override
-    public void onLoadFinished(Loader loader, Object data) {
-        mCursor = (Cursor)data;
-        UpdateView();
-    }
-
-    @Override
-    public void onLoaderReset(Loader loader) {
-        mCursor = null ;
-
-    }
-
-
-    private void UpdateView() {
-        if (mCursor == null) {
+    public void updateView(Cursor cursor) {
+        if (cursor == null) {
             return;
         }
 
-        mCursor.moveToFirst();
-        int idxName = mCursor.getColumnIndex(RulesColumns.NAME);
-        int idxCondition = mCursor.getColumnIndex(RulesColumns.CONDITION);
-        int idxRingMode = mCursor.getColumnIndex(RulesColumns.RINGMODE);
+        cursor.moveToFirst();
+        int idxName = cursor.getColumnIndex(RulesColumns.NAME);
+        int idxCondition = cursor.getColumnIndex(RulesColumns.CONDITION);
+        int idxRingMode = cursor.getColumnIndex(RulesColumns.RINGMODE);
+        int idxActivited = cursor.getColumnIndex(RulesColumns.ACTIVATED);
 
-        String strname = mCursor.getString(idxName) ;
-        final EditText viewName = (EditText)findViewById(R.id.WifiRuleName);
-        viewName.setText(strname);
+        strName = cursor.getString(idxName) ;
+        mEditName.setText(strName);
 
-        String strCondition = mCursor.getString(idxCondition);
+        String strCondition = cursor.getString(idxCondition);
 
         WifiCondition wifiCondition = new WifiCondition(strCondition);
-        String strSSID = wifiCondition.getSSID();
-        final EditText viewSSID = (EditText)findViewById(R.id.SSID);
-        viewSSID.setText(strSSID);
 
-        RadioGroup radioGroup = (RadioGroup)findViewById(R.id.ringmode);
-        int ringmode = mCursor.getInt(idxRingMode);
-        if (ringmode == RulesColumns.RM_SILENT) {
-            radioGroup.check(R.id.silence);
-        } else {
-            radioGroup.check(R.id.vibrate);
-        }
+        strSSID = wifiCondition.getSSID();
+        mEditSSID.setText(strSSID);
+
+        bActivited = (cursor.getInt(idxActivited) == 1);
+        mSwitchActivited.setChecked(bActivited);
+
+
+
+        mRingMode = cursor.getInt(idxRingMode);
+        setRingMode(mRingMode);
 
     }
 
+    @Override
+    public boolean isModified() {
+        if (mEditName.getText().toString().equals(strName) == false)
+            return true ;
 
-    private void saveToDatabase() {
-        final EditText viewRuleName = (EditText)findViewById(R.id.WifiRuleName);
-        String strName = viewRuleName.getText().toString();
+        if (mEditSSID.getText().toString().equals(strSSID) == false)
+            return true ;
 
-        final EditText viewSSID = (EditText)findViewById(R.id.SSID);
-        String strSSID = viewSSID.getText().toString();
+        if (mSwitchActivited.isChecked() != bActivited)
+            return true ;
+
+
+        if (getRingMode() != mRingMode)
+            return true;
+
+        return false;
+    }
+
+
+    @Override
+    public ContentValues getContentValues() {
+
+        String strssid = mEditSSID.getText().toString().trim();
+        if (strssid.isEmpty()) {
+            Toast.makeText(this, getString(R.string.toast_need_SSID), Toast.LENGTH_SHORT).show();
+            return null;
+        }
+        strSSID = strssid ;
+
+        String strtemp = mEditName.getText().toString().trim();
+        if (strtemp.isEmpty()) {
+            Toast.makeText(this, getString(R.string.toast_need_rule_name), Toast.LENGTH_SHORT).show();
+            return null ;
+        }
+
+        strSSID = strssid ;
+        strName = strtemp ;
+
         WifiCondition wifiCondition = new WifiCondition();
         wifiCondition.setSSID(strSSID);
         String strCondition = wifiCondition.BuildConditionString();
 
-        RadioGroup radioGroup = (RadioGroup)findViewById(R.id.ringmode);
-        int idRingMode = radioGroup.getCheckedRadioButtonId();
-        int ringmode ;
-        if (idRingMode == R.id.silence) {
-            ringmode = RulesColumns.RM_SILENT ;
-        } else {
-            ringmode = RulesColumns.RM_VIBRATE;
-        }
+        bActivited = mSwitchActivited.isChecked() ;
 
-        if (mode == Constants.INTENT_NEW) {
-            ContentValues values = new ContentValues();
-            values.put(RulesColumns.NAME, strName);
-            values.put(RulesColumns.ACTIVATED, 1);
+        int ringmode  = getRingMode();
+
+        ContentValues values = new ContentValues();
+
+        if (getMode() == Constants.INTENT_NEW) {
             values.put(RulesColumns.RULETYPE, RulesColumns.RT_WIFI);
-            values.put(RulesColumns.RINGMODE, ringmode);
-            values.put(RulesColumns.CONDITION, strCondition);
             values.put(RulesColumns.SECONDCONDITION,"");
             values.put(RulesColumns.DESCRIPTION,"");
+        }
+        values.put(RulesColumns.ACTIVATED, bActivited?1:0);
+        values.put(RulesColumns.NAME, strName);
+        values.put(RulesColumns.CONDITION, strCondition);
+        values.put(RulesColumns.RINGMODE,ringmode);
 
-            mUri = getContentResolver().insert(RulesColumns.CONTENT_URI,values);
-            mode = Constants.INTENT_EDIT;
+        return values;
+    }
+
+    @Override
+    public void onSuccessUpdateDatabase(Uri uri) {
+
+        if (bActivited == false)
+            return ;
 
 
-        } else {
-            ContentValues values = new ContentValues();
+        ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo ninfo = cm.getActiveNetworkInfo();
 
-            values.put(RulesColumns.NAME, strName);
-            values.put(RulesColumns.CONDITION, strCondition);
-            values.put(RulesColumns.RINGMODE,ringmode);
-            getContentResolver().update(mUri, values, null, null);
+        if (ninfo != null && ninfo.isConnected() && ninfo.getType() == ConnectivityManager.TYPE_WIFI) {
+            WifiManager wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+            if (wifiManager != null) {
+                WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+                String currssid = wifiInfo.getSSID();
+                if (currssid.equals(strSSID)) {
+                    WifiMuteService.wifiConnected(this, strSSID);
+                }
+            }
         }
 
-        bModified = false ;
     }
 }

@@ -37,8 +37,8 @@ public class ConditionTest extends TestCase {
         assertEquals(Condition.RT_LOCATION, condition.getType());
         assertEquals("location: 45.678, 78.334", condition.toString());
         assertEquals("location: 45.678, 78.334", ((LocationCondition)condition).BuildConditionString());
-        assertEquals(45.678f, ((LocationCondition) condition).getLatitude());
-        assertEquals(78.334f, ((LocationCondition)condition).getLongitude());
+        assertEquals(45.678d, ((LocationCondition) condition).getLatitude());
+        assertEquals(78.334d, ((LocationCondition)condition).getLongitude());
         assertEquals(0, ((LocationCondition)condition).getRadar());
         assertEquals(true, condition.isValidConditionString(strlocation));
 
@@ -49,8 +49,8 @@ public class ConditionTest extends TestCase {
         assertEquals(Condition.RT_LOCATION, condition.getType());
         assertEquals("location: 45.234, -45.221, 56", condition.toString());
         assertEquals("location: 45.234, -45.221, 56", ((LocationCondition)condition).BuildConditionString());
-        assertEquals(45.234f, ((LocationCondition)condition).getLatitude());
-        assertEquals(-45.221f, ((LocationCondition)condition).getLongitude());
+        assertEquals(45.234d, ((LocationCondition)condition).getLatitude());
+        assertEquals(-45.221d, ((LocationCondition)condition).getLongitude());
         assertEquals(56, ((LocationCondition)condition).getRadar());
         assertEquals(true, condition.isValidConditionString(strlocation));
 
@@ -61,8 +61,8 @@ public class ConditionTest extends TestCase {
         assertEquals(Condition.RT_LOCATION, condition.getType());
         assertEquals("location: 45.234, -45.221, 56", condition.toString());
         assertEquals("location: 45.234, -45.221, 56", ((LocationCondition)condition).BuildConditionString());
-        assertEquals(45.234f, ((LocationCondition)condition).getLatitude());
-        assertEquals(-45.221f, ((LocationCondition)condition).getLongitude());
+        assertEquals(45.234d, ((LocationCondition)condition).getLatitude());
+        assertEquals(-45.221d, ((LocationCondition)condition).getLongitude());
         assertEquals(56, ((LocationCondition)condition).getRadar());
         assertEquals(true, condition.isValidConditionString(strlocation));
 

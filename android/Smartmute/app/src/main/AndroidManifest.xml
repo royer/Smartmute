@@ -3,12 +3,18 @@
     package="bangz.smartmute" >
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses_permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
+
+        <!-- Google Play Services -->
+        <meta-data android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
         <activity
             android:name=".RulelistActivity"
             android:label="@string/app_name" >
@@ -39,7 +45,6 @@
             android:name=".services.TimeRuleAlarmService"
             android:exported="false" >
         </service>
-
         <service
             android:name=".services.WifiMuteService"
             android:exported="false" >
@@ -54,6 +59,10 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".LocationRuleEditActivity"
+            android:label="@string/title_activity_location_rule_edit" >
+        </activity>
     </application>
 
 </manifest>

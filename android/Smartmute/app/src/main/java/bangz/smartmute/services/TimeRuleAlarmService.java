@@ -169,7 +169,7 @@ public class TimeRuleAlarmService extends IntentService {
             }
             PrefUtils.rememberWhoMuted(this, _id);
             //TODO notify user by notification
-            if (Config.IS_TEST_BUILD == true) {
+            if (Config.TEST_BUILD == true) {
                 String msg = "set ringer mode to ";
                 if (ringmode == RulesColumns.RM_SILENT) {
                     msg += "silent";
@@ -193,7 +193,7 @@ public class TimeRuleAlarmService extends IntentService {
             calendarRestore.add(Calendar.DATE, 1);
         }
 
-        if (Config.IS_TEST_BUILD) {
+        if (Config.TEST_BUILD) {
             calendarRestore = calendarNow ;
             calendarRestore.add(Calendar.SECOND, 10) ;
         }
@@ -295,7 +295,7 @@ public class TimeRuleAlarmService extends IntentService {
 
         if (nextmutetime != null) {
 
-            if (Config.IS_TEST_BUILD) {
+            if (Config.TEST_BUILD) {
 
                 nextmutetime = currenttime ;
                 nextmutetime.add(Calendar.SECOND, 10);

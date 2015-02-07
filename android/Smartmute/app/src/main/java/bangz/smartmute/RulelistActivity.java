@@ -134,7 +134,7 @@ public class RulelistActivity extends ActionBarActivity
 
             DialogFragment chooseRuleTypeDialog = new ChooseRuleTypeDialogFragment();
             chooseRuleTypeDialog.show(getFragmentManager(), "ChooseRuleTypeDialog");
-            LogUtils.LOGD(TAG, "DIalog showed.");
+            LogUtils.LOGD(TAG, "Dialog showed.");
 
 
             //Intent intent = new Intent(this, WifiEditActivity.class);
@@ -151,6 +151,8 @@ public class RulelistActivity extends ActionBarActivity
         intent.setData(uri);
         switch(ruletype) {
             case RulesColumns.RT_LOCATION:
+                intent.setClass(this, LocationRuleEditActivity.class);
+                intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_EDIT);
                 break;
             case RulesColumns.RT_WIFI:
                 intent.setClass(this, WifiEditActivity.class);
@@ -182,7 +184,9 @@ public class RulelistActivity extends ActionBarActivity
                         public void onClick(DialogInterface dialog, int which) {
                             //mListerner.onItemSelected(ChooseRuleTypeDialogFragment.this, which);
                             if (which == 0) {
-                                //TODO location
+                                Intent intent = new Intent(getActivity(), LocationRuleEditActivity.class);
+                                intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);
+                                startActivity(intent);
                             } else if (which == 1) {
                                 Intent intent = new Intent(getActivity(), TimeRuleEditActivity.class);
                                 intent.putExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);

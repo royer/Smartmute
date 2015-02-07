@@ -31,9 +31,9 @@ public class LocationCondition extends Condition {
     public static final String strMatch =
             "(?i)\\s*location\\s*:\\s*[-+]?\\d+(\\.?\\d+)\\s*,\\s*[-+]?\\d+(\\.?\\d+)\\s*(,\\s*\\d+)?";
 
-    private float longitude ;   //经度
-    private float latitude ;    //纬度
-    private int   radar;        //metter
+    private double longitude ;   //经度
+    private double latitude ;    //纬度
+    private int    radar;        //metter
 
     public LocationCondition() {
         setType(Condition.RT_LOCATION);
@@ -57,10 +57,10 @@ public class LocationCondition extends Condition {
         }
 
         if (value[0].isEmpty() == false) {
-            latitude = Float.valueOf(value[0]);
+            latitude = Double.valueOf(value[0]);
         }
         if (value[1].isEmpty() == false) {
-            longitude = Float.valueOf(value[1]);
+            longitude = Double.valueOf(value[1]);
         }
         if (value.length == 3) {
             radar = Integer.valueOf(value[2]);
@@ -68,6 +68,15 @@ public class LocationCondition extends Condition {
 
         setConditionString(BuildConditionString());
 
+    }
+
+    public LocationCondition(final double longitude, final double latitude, final int radar) {
+        setType(Condition.RT_LOCATION);
+        this.longitude = longitude;
+        this.latitude = latitude;
+        this.radar = radar ;
+
+        setConditionString(BuildConditionString());
     }
 
     @Override
@@ -97,11 +106,11 @@ public class LocationCondition extends Condition {
         return sb.toString();
     }
 
-    public float getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public float getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 

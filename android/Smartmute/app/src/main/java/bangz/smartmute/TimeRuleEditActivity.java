@@ -37,11 +37,13 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.Switch;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import com.bangz.lib.ui.donebar.DoneBarActivity;
 
 import java.sql.Time;
+import java.util.ArrayList;
 
 import bangz.smartmute.content.RulesColumns;
 import bangz.smartmute.content.TimeCondition;
@@ -49,68 +51,71 @@ import bangz.smartmute.services.TimeRuleAlarmService;
 import bangz.smartmute.util.LogUtils;
 
 
-public class TimeRuleEditActivity extends DoneBarActivity
-        implements LoaderManager.LoaderCallbacks {
+public class TimeRuleEditActivity extends RuleEditActivity {
 
     private static final String TAG=TimeRuleEditActivity.class.getSimpleName();
 
     // Button for weekdays
 
+    private String strName ;
+    private String strDescription;
+
+    private String strStartTime;
+    private String strEndTime;
+    private int    iWhichDays;
+
+    private boolean bActivited ;
+    private int     mRingMode ;
 
 
-    private int mode;   //for NEW record or Update exist record
-    private Uri mUri;
-    private Cursor mCursor;
-    private boolean bModified = false;
 
-    private static final String[] PROJECTS = new String[] {
-            RulesColumns._ID,
-            RulesColumns.NAME,
-            RulesColumns.RULETYPE,
-            RulesColumns.CONDITION,
-            RulesColumns.SECONDCONDITION,
-            RulesColumns.ACTIVATED,
-            RulesColumns.RINGMODE,
-            RulesColumns.DESCRIPTION
-    };
+    private EditText mEditName ;
+    private EditText mEditDescription;
+    private EditText mEditStartTime ;
+    private EditText mEditEndTime;
+    private Switch   mSwitchActivited;
+    private RadioGroup mViewRingMode ;
+    private ToggleButton[] mButtonDays = new ToggleButton[7];
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_timerule_edit);
 
-        Intent intent = getIntent();
-        mode = intent.getIntExtra(Constants.INTENT_EDITORNEW,Constants.INTENT_NEW);
+        mEditName = (EditText)findViewById(R.id.TimeRuleName);
+        mEditDescription = (EditText)findViewById(R.id.TimeRuleDescription);
+        mEditStartTime = (EditText)findViewById(R.id.editStartTime);
+        mEditEndTime = (EditText)findViewById(R.id.editEndTime);
+        mSwitchActivited = (Switch)findViewById(R.id.Activited);
+        mViewRingMode = (RadioGroup)findViewById(R.id.ringmode);
 
-        if (mode == Constants.INTENT_EDIT) {
-            mUri = intent.getData();
-            LoaderManager lm = getSupportLoaderManager();
-            lm.initLoader(1, null, this);
+        mButtonDays[0] = (ToggleButton)findViewById(R.id.Sunday);
+        mButtonDays[1] = (ToggleButton)findViewById(R.id.Monday);
+        mButtonDays[2] = (ToggleButton)findViewById(R.id.Tuesday);
+        mButtonDays[3] = (ToggleButton)findViewById(R.id.Wednesday);
+        mButtonDays[4] = (ToggleButton)findViewById(R.id.Thursday);
+        mButtonDays[5] = (ToggleButton)findViewById(R.id.Friday);
+        mButtonDays[6] = (ToggleButton)findViewById(R.id.Saturday);
+
+
+        if (savedInstanceState == null) {
+            strName = "";
+            strDescription = "";
+            strStartTime = "";
+            strEndTime = "";
+            iWhichDays = 0;
+
+            bActivited = false;
+            mRingMode = RulesColumns.RM_NORMAL ;
+
+            mSwitchActivited.setChecked(true);
+            mViewRingMode.check(R.id.vibrate);
         }
 
-        //TODO need remove this savebutton when finished Donebar
-        Button saveButton = (Button)findViewById(R.id.btnSaveTimeRule);
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveToDatabase();
-            }
-        });
-
-        showDoneCancelBar(true);
-
     }
 
-    @Override
-    public void onDoneButtonClicked() {
-        saveToDatabase();
-        finish();
-    }
-
-    @Override
-    public void onCancelButtonClicked() {
-        finish();
-    }
 
     //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {
@@ -131,46 +136,73 @@ public class TimeRuleEditActivity extends DoneBarActivity
 //        return super.onOptionsItemSelected(item);
 //    }
 
-    private void updateView() {
+    private int getRingMode() {
+        int idringmode = mViewRingMode.getCheckedRadioButtonId() ;
+        if (idringmode == R.id.silence)
+            return RulesColumns.RM_SILENT ;
+        else if (idringmode == R.id.vibrate)
+            return RulesColumns.RM_VIBRATE ;
+        else
+            return RulesColumns.RM_NORMAL ;
+    }
 
-        if (mCursor == null)
-            return ;
+    private void setRingMode(int ringmode) {
+        if (ringmode == RulesColumns.RM_SILENT)
+            mViewRingMode.check(R.id.silence);
+        else if (ringmode == RulesColumns.RM_VIBRATE)
+            mViewRingMode.check(R.id.vibrate);
+    }
 
-        mCursor.moveToFirst();
-        int idxName = mCursor.getColumnIndex(RulesColumns.NAME);
-        int idxCondition = mCursor.getColumnIndex(RulesColumns.CONDITION);
-        int idxDescription = mCursor.getColumnIndex(RulesColumns.DESCRIPTION);
-        int idxRingMode = mCursor.getColumnIndex(RulesColumns.RINGMODE);
-        int idxActivited = mCursor.getColumnIndex(RulesColumns.ACTIVATED);
+    private int getWhichDays() {
+        int whichdays = 0;
 
-        String strname = mCursor.getString(idxName);
-        final EditText editName = (EditText)findViewById(R.id.TimeRuleName);
-        editName.setText(strname);
-        String strdescript = mCursor.getString(idxDescription);
-        final EditText editDescript = (EditText)findViewById(R.id.TimeRuleDescription);
-        editDescript.setText(strdescript);
-
-        RadioGroup radiogroup = (RadioGroup)findViewById(R.id.ringmode);
-        int ringmode = mCursor.getInt(idxRingMode);
-        if (ringmode == RulesColumns.RM_SILENT) {
-            radiogroup.check(R.id.silence);
+        CheckBox checkbox = (CheckBox)findViewById(R.id.chkAllDays);
+        if (checkbox.isChecked()) {
+            whichdays = TimeCondition.ALLDAYSSET ;
         } else {
-            radiogroup.check(R.id.vibrate);
+
+            for (int i = 0; i < 7; i ++) {
+                if (mButtonDays[i].isChecked())
+                    whichdays |= (1 << i) ;
+            }
         }
 
-        String strCondition = mCursor.getString(idxCondition);
+        return whichdays ;
+    }
+
+    @Override
+    public void updateView(Cursor cursor) {
+
+        if (cursor == null)
+            return ;
+
+        cursor.moveToFirst();
+        int idxName = cursor.getColumnIndex(RulesColumns.NAME);
+        int idxCondition = cursor.getColumnIndex(RulesColumns.CONDITION);
+        int idxDescription = cursor.getColumnIndex(RulesColumns.DESCRIPTION);
+        int idxRingMode = cursor.getColumnIndex(RulesColumns.RINGMODE);
+        int idxActivited = cursor.getColumnIndex(RulesColumns.ACTIVATED);
+
+        strName = cursor.getString(idxName);
+        mEditName.setText(strName);
+
+        strDescription = cursor.getString(idxDescription);
+        mEditDescription.setText(strDescription);
+
+        mRingMode = cursor.getInt(idxRingMode);
+        setRingMode(mRingMode);
+
+        String strCondition = cursor.getString(idxCondition);
         TimeCondition timeCondition = new TimeCondition(strCondition);
         Time starttime = timeCondition.getBegin();
         Time endtime = timeCondition.getEnd();
-        String strStartTime = starttime.toString().substring(0,starttime.toString().lastIndexOf(':'));
-        String strEndTime = endtime.toString().substring(0,endtime.toString().lastIndexOf(':'));
-        EditText editStartTime = (EditText)findViewById(R.id.editStartTime);
-        editStartTime.setText(strStartTime);
-        EditText editEndTime = (EditText)findViewById(R.id.editEndTime);
-        editEndTime.setText(strEndTime);
+        strStartTime = starttime.toString().substring(0,starttime.toString().lastIndexOf(':'));
+        strEndTime = endtime.toString().substring(0,endtime.toString().lastIndexOf(':'));
+        mEditStartTime.setText(strStartTime);
+        mEditEndTime.setText(strEndTime);
 
-        Switch btnSwitch = (Switch)findViewById(R.id.Activited);
-        btnSwitch.setChecked(mCursor.getInt(idxActivited) != 0);
+        bActivited = (cursor.getInt(idxActivited) != 0);
+        mSwitchActivited.setChecked(bActivited);
 
         if(timeCondition.isAllDaySet()) {
             CheckBox chkAllDays = (CheckBox)findViewById(R.id.chkAllDays);
@@ -178,128 +210,98 @@ public class TimeRuleEditActivity extends DoneBarActivity
             //TODO hidden Weekdays selector.
         }
 
-        ToggleButton button = (ToggleButton)findViewById(R.id.Sunday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_SUNDAY));
-        button = (ToggleButton)findViewById(R.id.Monday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_MONDAY));
-        button = (ToggleButton)findViewById(R.id.Tuesday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_TUESDAY));
-        button = (ToggleButton)findViewById(R.id.Wednesday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_WEDNESDAY));
-        button = (ToggleButton)findViewById(R.id.Thursday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_THURSDAY));
-        button = (ToggleButton)findViewById(R.id.Friday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_FRIDAY));
-        button = (ToggleButton)findViewById(R.id.Saturday);
-        button.setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_SATURDAY));
+        iWhichDays = timeCondition.getWhichdays() ;
+        mButtonDays[0].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_SUNDAY));
+        mButtonDays[1].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_MONDAY));
+        mButtonDays[2].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_TUESDAY));
+        mButtonDays[3].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_WEDNESDAY));
+        mButtonDays[4].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_THURSDAY));
+        mButtonDays[5].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_FRIDAY));
+        mButtonDays[6].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_SATURDAY));
     }
 
+    @Override
+    public boolean isModified() {
+        if (mEditName.getText().toString().equals(strName) == false)
+            return true ;
 
-    private void saveToDatabase() {
+        if (mEditDescription.getText().toString().equals(strDescription) == false)
+            return true ;
 
-        final EditText rulename = (EditText)findViewById(R.id.TimeRuleName);
-        String strName = rulename.getText().toString();
+        if (mEditStartTime.getText().toString().equals(strStartTime) == false)
+            return true;
 
-        final EditText editDescript = (EditText)findViewById(R.id.TimeRuleDescription);
-        String strDescript = editDescript.getText().toString();
+        if (mEditEndTime.getText().toString().equals(strEndTime) == false)
+            return true ;
 
-        final EditText editStartTime = (EditText)findViewById(R.id.editStartTime);
-        String strStartTime = editStartTime.getText().toString();
+        if (mSwitchActivited.isChecked() != bActivited)
+            return true ;
 
-        final EditText editEndTime = (EditText)findViewById(R.id.editEndTime);
-        String strEndTime = editEndTime.getText().toString();
+        if (getRingMode() != mRingMode)
+            return true ;
 
-        final Switch btnActivited = (Switch)findViewById(R.id.Activited);
-        int activited = btnActivited.isChecked() ? 1:0;
+        if (getWhichDays() != iWhichDays)
+            return true ;
 
-        RadioGroup radioGroup = (RadioGroup)findViewById(R.id.ringmode);
-        int idRingMode = radioGroup.getCheckedRadioButtonId();
-        int ringmode ;
-        if (idRingMode == R.id.silence) {
-            ringmode = RulesColumns.RM_SILENT;
-        } else  {
-            ringmode = RulesColumns.RM_VIBRATE ;
+        return false;
+    }
+
+    @Override
+    public ContentValues getContentValues() {
+
+        ContentValues values ;
+
+        String strname = mEditName.getText().toString().trim();
+        if (strname.isEmpty()) {
+            Toast.makeText(this, getString(R.string.toast_need_rule_name), Toast.LENGTH_SHORT).show();
+            return null;
         }
+        strName = strname ;
 
-        String strWhichDays ;
-        CheckBox cbAllDays = (CheckBox)findViewById(R.id.chkAllDays);
-        if (cbAllDays.isChecked()) {
-            strWhichDays = "1111111";
-        } else {
-            ToggleButton buttonDay = (ToggleButton)findViewById(R.id.Sunday);
-            StringBuilder stringbuilder = new StringBuilder();
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-            buttonDay = (ToggleButton)findViewById(R.id.Monday);
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-            buttonDay = (ToggleButton)findViewById(R.id.Tuesday);
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-            buttonDay = (ToggleButton)findViewById(R.id.Wednesday);
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-            buttonDay = (ToggleButton)findViewById(R.id.Thursday);
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-            buttonDay = (ToggleButton)findViewById(R.id.Friday);
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-            buttonDay = (ToggleButton)findViewById(R.id.Saturday);
-            stringbuilder.append(buttonDay.isChecked()?"1":"0");
-
-            strWhichDays = stringbuilder.toString();
+        strDescription = mEditDescription.getText().toString().trim();
+        String strtemp = mEditStartTime.getText().toString().trim() ;
+        if (strtemp.isEmpty()) {
+            Toast.makeText(this, "Invalid time format.", Toast.LENGTH_SHORT).show();
+            return null;
         }
+        strStartTime = strtemp ;
 
-        String strCondition ;
-        strCondition = String.format("time: %s, %s, %s", strStartTime, strEndTime, strWhichDays);
-        long recordid = 0;
+        strtemp = mEditEndTime.getText().toString().trim();
+        if (strtemp.isEmpty()) {
+            Toast.makeText(this, "Invalid time format.", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+        strEndTime = strtemp ;
+        bActivited = mSwitchActivited.isChecked() ;
+        iWhichDays = getWhichDays() ;
+        mRingMode = getRingMode() ;
 
-        if (mode == Constants.INTENT_NEW) {
-            ContentValues values = new ContentValues();
-            values.put(RulesColumns.NAME, strName);
-            values.put(RulesColumns.ACTIVATED, activited);
+        String  strcondition = String.format("time: %s, %s, %s",
+                strStartTime, strEndTime, TimeCondition.whichdaysToString(iWhichDays)) ;
+
+        values = new ContentValues() ;
+        if (getMode() == Constants.INTENT_NEW) {
             values.put(RulesColumns.RULETYPE, RulesColumns.RT_TIME);
-            values.put(RulesColumns.RINGMODE, ringmode);
-            values.put(RulesColumns.CONDITION, strCondition);
-            values.put(RulesColumns.SECONDCONDITION, "");  //TODO combine condition until Version 2.0 to implement.
-            values.put(RulesColumns.DESCRIPTION,strDescript);
-
-            mUri = getContentResolver().insert(RulesColumns.CONTENT_URI, values);
-            mode = Constants.INTENT_EDIT;
-        } else {
-            ContentValues values = new ContentValues();
-            values.put(RulesColumns.NAME, strName);
-            values.put(RulesColumns.ACTIVATED, activited);
-            values.put(RulesColumns.CONDITION, strCondition);
-            values.put(RulesColumns.RINGMODE,ringmode);
-            values.put(RulesColumns.DESCRIPTION, strDescript);
-            getContentResolver().update(mUri, values, null, null);
-
-
+            values.put(RulesColumns.SECONDCONDITION,""); //TODO combine condition until version 2.0 to iimplement
         }
 
-        recordid = ContentUris.parseId(mUri);
+        values.put(RulesColumns.NAME, strName);
+        values.put(RulesColumns.ACTIVATED, bActivited?1:0);
+        values.put(RulesColumns.RINGMODE, mRingMode);
+        values.put(RulesColumns.CONDITION, strcondition);
+        values.put(RulesColumns.DESCRIPTION, strDescription);
 
-        if (activited != 0) {
-            TimeRuleAlarmService.startScheduleAlarm(this, mUri);
-        } else {
-            TimeRuleAlarmService.cancelScheduledAlarm(this, mUri);
-        }
-
-        bModified = false;
+        return values;
     }
 
     @Override
-    public Loader onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(this, mUri, PROJECTS,"",null,null);
-    }
+    public void onSuccessUpdateDatabase(Uri uri) {
 
-    @Override
-    public void onLoadFinished(Loader loader, Object data) {
-        mCursor = (Cursor)data;
-        updateView();
-
+        if (bActivited)
+            TimeRuleAlarmService.startScheduleAlarm(this, uri);
+        else
+            TimeRuleAlarmService.cancelScheduledAlarm(this, uri);
     }
 
 
-    @Override
-    public void onLoaderReset(Loader loader) {
-
-        mCursor = null ;
-    }
 }

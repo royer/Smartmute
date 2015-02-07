@@ -24,7 +24,6 @@
         <item>Restore</item>
         <item>About</item>
     </string-array>
-
     <string-array name="rule_type">
         <item>Location</item>
         <item>Time Schedule</item>
@@ -55,5 +54,13 @@
     <string name="edit_description_hint">Description</string>
     <string name="alldays">All Days</string>
     <string name="activited_label">Activited</string>
+    <string name="toast_need_SSID">SSID CAN NOT BE EMPTY!</string>
+    <string name="toast_need_rule_name">Rule must have a name!</string>
+    <string name="title_activity_location_rule_edit">LocationRuleEditActivity</string>
+    <string name="label_longitude">Longitude:</string>
+    <string name="label_latitude">Latitude:</string>
+    <string name="label_range">Range:</string>
+    <string name="toast_location_cannot_empty">Longtitude or Latitude can not be empty.</string>
+    <string name="toast_location_format_error">Longitude or Latitude is wrong format.</string>
 
 </resources>

@@ -18,6 +18,7 @@ package bangz.smartmute.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 import android.preference.PreferenceManager;
 
 import java.util.Set;
@@ -42,6 +43,7 @@ public class PrefUtils {
 
     public static final String PREF_LAST_WIFI_SSID = "pref_last_wifi_ssid";
     public static final String PREF_ENABLE_SMART_MUTE = "pref_enable_smart_mute";
+    public static final String PREF_LOCATION_FORMAT = "pref_location_format";
 
     public static void enableSmartMute(final Context context, boolean benable) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
@@ -99,5 +101,15 @@ public class PrefUtils {
     public static String getLastWifiSsid(final Context context) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         return sp.getString(PREF_LAST_WIFI_SSID,"");
+    }
+
+    public static int getLocatonFormat(final Context context) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        return sp.getInt(PREF_LOCATION_FORMAT, Location.FORMAT_DEGREES);
+    }
+
+    public static void setLocationFormat(final Context context, int format) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        sp.edit().putInt(PREF_LOCATION_FORMAT, format).commit();
     }
 }
