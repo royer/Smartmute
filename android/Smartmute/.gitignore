@@ -1,5 +1,33 @@
+#################################
+# Android Studio gitignore files
+#
+################################
 .gradle
-/local.properties
-/.idea/workspace.xml
+local.properties
+.idea/workspace.xml
+.idea/libraries
 .DS_Store
-/build
+build/
+
+# build application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# for old Android Studio Project format
+/*/out
+/*/*/build
+/*/*/production
+*.iws
+*.ipr
+*.swp
+*~
