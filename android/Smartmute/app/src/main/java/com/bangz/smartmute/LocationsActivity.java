@@ -16,14 +16,19 @@
 
 package com.bangz.smartmute;
 
-import android.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
+import android.location.Location;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.ViewPager;
+
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.bangz.common.view.SlidingTabLayout;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
+
 import com.google.android.gms.maps.OnMapReadyCallback;
 
 
@@ -36,7 +41,11 @@ implements RulelistFragment.OnRuleItemClickListerner
     private static final String TAG_MAP = "map";
     private static final String TAG_LIST = "list";
 
+    private SlidingTabLayout mSlidingTabLayout ;
+    private ViewPager       mViewPager ;
+
     private String mCurrentFragmentTag ;
+
 
     private GoogleMap   mMap ;
 
@@ -47,6 +56,14 @@ implements RulelistFragment.OnRuleItemClickListerner
 
         setupNavDrawer();
 
+
+        mViewPager = (ViewPager)findViewById(R.id.viewpager);
+        mViewPager.setAdapter(new LocationsPagerAdapter(getSupportFragmentManager()));
+
+        // Give the SlidingTabLayout the ViewPager, this must be done AFTER the viewpager has had
+        // it's PagerAdapter set/
+        mSlidingTabLayout = (SlidingTabLayout)findViewById(R.id.sliding_tabs);
+        mSlidingTabLayout.setViewPager(mViewPager);
         //MapFragment mapFragment = (MapFragment)getFragmentManager().findFragmentById(R.id.map);
         //MapFragment mapFragment = (MapFragment)getSupportFragmentManager().findFragmentById(R.id.map);
 
@@ -57,10 +74,10 @@ implements RulelistFragment.OnRuleItemClickListerner
 //
 //        mapFragment.getMapAsync(this);
 
-        RulelistFragment fragment = RulelistFragment.newInstance(2);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, fragment, TAG_LIST)
-                .commit();
+//        RulelistFragment fragment = RulelistFragment.newInstance(2);
+//        getSupportFragmentManager().beginTransaction()
+//                .replace(R.id.container, fragment, TAG_LIST)
+//                .commit();
         mCurrentFragmentTag = TAG_LIST;
     }
 
@@ -84,12 +101,12 @@ implements RulelistFragment.OnRuleItemClickListerner
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
 
-        if (isDrawerOpened() == false) {
-            MenuItem listview = menu.findItem(R.id.action_listview);
-            MenuItem mapview = menu.findItem(R.id.action_mapview);
-            listview.setVisible(mCurrentFragmentTag == TAG_MAP);
-            mapview.setVisible(mCurrentFragmentTag == TAG_LIST);
-        }
+//        if (isDrawerOpened() == false) {
+//            MenuItem listview = menu.findItem(R.id.action_listview);
+//            MenuItem mapview = menu.findItem(R.id.action_mapview);
+//            listview.setVisible(mCurrentFragmentTag == TAG_MAP);
+//            mapview.setVisible(mCurrentFragmentTag == TAG_LIST);
+//        }
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -100,32 +117,32 @@ implements RulelistFragment.OnRuleItemClickListerner
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
 
-        int id = item.getItemId();
-        if (id == R.id.action_mapview) {
-            LocationsMapFragment mapFragment = (LocationsMapFragment)
-                    getSupportFragmentManager().findFragmentByTag(TAG_MAP);
-            if (mapFragment == null) {
-                mapFragment = LocationsMapFragment.newInstance() ;
-            }
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container,mapFragment,TAG_MAP)
-                    .commit();
-            mCurrentFragmentTag = TAG_MAP ;
-
-            invalidateOptionsMenu();
-
-        } else if (id == R.id.action_listview) {
-            RulelistFragment fragment = (RulelistFragment)
-                    getSupportFragmentManager().findFragmentByTag(TAG_LIST);
-            if (fragment == null)
-                fragment = RulelistFragment.newInstance(2);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment, TAG_LIST)
-                    .commit();
-            mCurrentFragmentTag = TAG_LIST ;
-
-            invalidateOptionsMenu();
-        }
+//        int id = item.getItemId();
+//        if (id == R.id.action_mapview) {
+//            LocationsMapFragment mapFragment = (LocationsMapFragment)
+//                    getSupportFragmentManager().findFragmentByTag(TAG_MAP);
+//            if (mapFragment == null) {
+//                mapFragment = LocationsMapFragment.newInstance() ;
+//            }
+//            getSupportFragmentManager().beginTransaction()
+//                    .replace(R.id.container,mapFragment,TAG_MAP)
+//                    .commit();
+//            mCurrentFragmentTag = TAG_MAP ;
+//
+//            invalidateOptionsMenu();
+//
+//        } else if (id == R.id.action_listview) {
+//            RulelistFragment fragment = (RulelistFragment)
+//                    getSupportFragmentManager().findFragmentByTag(TAG_LIST);
+//            if (fragment == null)
+//                fragment = RulelistFragment.newInstance(2);
+//            getSupportFragmentManager().beginTransaction()
+//                    .replace(R.id.container, fragment, TAG_LIST)
+//                    .commit();
+//            mCurrentFragmentTag = TAG_LIST ;
+//
+//            invalidateOptionsMenu();
+//        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -140,5 +157,44 @@ implements RulelistFragment.OnRuleItemClickListerner
     @Override
     public void onRuleItemSelected(long id, int ruletype) {
 
+    }
+
+    public static class LocationsPagerAdapter extends FragmentPagerAdapter {
+
+        public LocationsPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            Fragment fragment = null;
+            switch(position) {
+                case 0:
+                    fragment = LocationsMapFragment.newInstance();
+                    break;
+                case 1:
+                    fragment = RulelistFragment.newInstance(BaseActivity.NAVDRAWER_LOCATIONS+1);
+                    break;
+            }
+
+            return fragment ;
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            String strTitle ;
+
+            if (position == 0) {
+                strTitle = "Map View";
+            } else {
+                strTitle =  "List View";
+            }
+            return strTitle;
+        }
     }
 }
