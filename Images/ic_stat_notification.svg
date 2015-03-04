@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="512"
+   height="512"
+   viewBox="0 0 512.00001 512.00001"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="ic_stat_notification.svg"
+   inkscape:export-filename="/Users/wangruoyu/Temp/ic_stat_notification.png"
+   inkscape:export-xdpi="4.3586044"
+   inkscape:export-ydpi="4.3586044">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.49497475"
+     inkscape:cx="38.868094"
+     inkscape:cy="504.28286"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1440"
+     inkscape:window-height="855"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     units="px" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-540.36216)">
+    <path
+       style="fill:#ffffff;fill-opacity:1;stroke:#c1c600;stroke-width:0.1;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;image-rendering:auto"
+       d="M 254.63867,554.10627 A 244.28572,244.28572 0 0 0 10.353521,798.39143 244.28572,244.28572 0 0 0 254.63867,1042.6766 244.28572,244.28572 0 0 0 498.92578,798.39143 244.28572,244.28572 0 0 0 254.63867,554.10627 Z m 71.72266,95.74805 a 24.328945,24.328945 0 0 1 24.32812,24.32813 24.328945,24.328945 0 0 1 -24.32812,24.33007 24.328945,24.328945 0 0 1 -24.33008,-24.33007 24.328945,24.328945 0 0 1 24.33008,-24.32813 z m -152.5332,0.0312 a 25.266121,25.266121 0 0 1 25.26562,25.26758 25.266121,25.266121 0 0 1 -25.26562,25.26562 25.266121,25.266121 0 0 1 -25.26758,-25.26562 25.266121,25.266121 0 0 1 25.26758,-25.26758 z m 160.14062,60.5957 1.30078,174.19532 -103.80859,-52.35352 c -3.82775,1.30546 -8.47741,2.07617 -13.51367,2.07617 l -30.75,0 c -13.10419,0 -23.6543,-5.17274 -23.6543,-11.59765 l 0,-54.50782 c 0,-6.42491 10.55011,-11.59765 23.6543,-11.59765 l 30.75,0 c 7.57708,0 14.28412,1.73664 18.60742,4.4375 l 97.41406,-50.65235 z m -159.58789,179.19532 76.53125,42.16406 78.30078,-39.09961 14.61524,26.56836 -60.67188,30.29687 59.29883,32.66993 -15.75977,25.96875 -76.52929,-42.16407 -78.30274,39.10157 -14.61523,-26.57032 60.67187,-30.29687 -59.29882,-32.66992 15.75976,-25.96875 z"
+       id="path3344"
+       inkscape:export-filename="/Users/wangruoyu/Temp/ic_stat_notification.png"
+       inkscape:export-xdpi="13.260473"
+       inkscape:export-ydpi="13.260473"
+       inkscape:connector-curvature="0" />
+  </g>
+</svg>

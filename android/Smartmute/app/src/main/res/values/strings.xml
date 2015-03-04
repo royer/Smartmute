@@ -30,6 +30,11 @@
         <item>Wifi Network</item>
     </string-array>
 
+    <string-array name="transition_type">
+        <item>ENTER</item>
+        <item>DWELL</item>
+    </string-array>
+
     <string name="title_activity_wifi_edit">WifiEdit</string>
     <string name="hello_world">Hello world!</string>
     <string name="SSID_Label">SSID:</string>
@@ -60,7 +65,14 @@
     <string name="label_longitude">Longitude:</string>
     <string name="label_latitude">Latitude:</string>
     <string name="label_range">Range:</string>
-    <string name="toast_location_cannot_empty">Longtitude or Latitude can not be empty.</string>
+    <string name="toast_location_cannot_empty">Longitude or Latitude can not be empty.</string>
     <string name="toast_location_format_error">Longitude or Latitude is wrong format.</string>
+    <string name="location_provider_disabled_title">Location Provider is disabled</string>
+    <string name="location_provider_disabled_text">Touch to open Location Settings.</string>
+    <string name="geo_not_available_retry_title">Geofences is not available currently.</string>
+    <string name="geo_not_available_retry_text">Touch to try add Geofences again.</string>
+    <string name="title_activity_locations">Locations</string>
+    <string name="action_mapview">Map</string>
+    <string name="action_listview">List</string>
 
 </resources>

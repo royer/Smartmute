@@ -4,14 +4,4 @@
         android:title="@string/action_settings"
         android:orderInCategory="100"
         app:showAsAction="never" />
-    <item android:id="@+id/action_add"
-        android:title="@string/action_add"
-        android:orderInCategory="100"
-        android:icon="@android:drawable/ic_input_add"
-        app:showAsAction="ifRoom" />
-    <item android:id="@+id/action_search"
-        android:title="@android:string/search_go"
-        android:orderInCategory="100"
-        android:icon="@android:drawable/ic_menu_search"
-        app:showAsAction="always" />
 </menu>
