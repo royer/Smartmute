@@ -22,6 +22,7 @@ import android.location.Location;
 import android.preference.PreferenceManager;
 
 import com.bangz.smartmute.Constants;
+import com.google.android.gms.maps.model.LatLng;
 
 /**
  * Created by royerwang on 14-12-12.
@@ -47,9 +48,12 @@ public class PrefUtils {
     // Location mute shared preferences
     public static final String PREF_LOCATION_FORMAT = "pref_location_format";
     public static final String PREF_DEFAULT_RADIUS = "pref_default_radius";
-    public static final float  DEFAULT_RADIUS = 30.0f;
+    public static final float  DEFAULT_RADIUS = 50.0f;
     public static final String PREF_DEFAULT_LOITERING = "pref_default_lotering";
     public static final int    DEFAULT_LOITERING = 1 * Constants.ONE_MINUTE_IN_MS ;
+
+    private static final String PREF_LAST_LAT = "pref_last_lat";
+    private static final String PREF_LAST_LNG = "pref_last_lng";
 
     public static void enableSmartMute(final Context context, boolean benable) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
@@ -138,4 +142,39 @@ public class PrefUtils {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         sp.edit().putInt(PREF_DEFAULT_LOITERING, value).commit();
     }
+
+    public static void rememberLastLocation(final Context ctx, final double Lat, final double Lng) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putLong(PREF_LAST_LAT, Double.doubleToRawLongBits(Lat));
+        editor.putLong(PREF_LAST_LNG, Double.doubleToRawLongBits(Lng));
+        editor.commit();
+    }
+
+    public static void rememberLastLocaton(final Context ctx, final LatLng latLng) {
+        rememberLastLocation(ctx, latLng.latitude, latLng.longitude);
+    }
+    public static void rememberLastLocation(final Context ctx, final Location location) {
+        rememberLastLocation(ctx, location.getLatitude(), location.getLongitude());
+    }
+
+    /**
+     *
+     * @param ctx
+     * @return if either PREF_LAST_LAT or PREF_LAST_LNG is not exist, return null
+     */
+    public static LatLng getLastLatLng(final Context ctx) {
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        if (!sp.contains(PREF_LAST_LAT) || !sp.contains(PREF_LAST_LNG)) {
+            return null ;
+        }
+
+        long temp = sp.getLong(PREF_LAST_LAT,0);
+        double lat = Double.longBitsToDouble(temp);
+        temp = sp.getLong(PREF_LAST_LNG, 0);
+        double lng = Double.longBitsToDouble(temp);
+        return new LatLng(lat, lng);
+    }
+
 }

@@ -71,12 +71,13 @@ public abstract class RuleEditActivity extends DoneBarActivity
 
         super.onCreate(savedInstanceState);
 
+        Intent intent = getIntent();
+        mMode = intent.getIntExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);
+        mUri = intent.getData();
+
         if (savedInstanceState == null) {
-            Intent intent = getIntent();
-            mMode = intent.getIntExtra(Constants.INTENT_EDITORNEW, Constants.INTENT_NEW);
-            mUri = intent.getData();
         } else {
-            //TODO get data from savedInstanceState
+
         }
 
         if (mUri == null) {
@@ -120,6 +121,10 @@ public abstract class RuleEditActivity extends DoneBarActivity
                 if (mMode == Constants.INTENT_NEW) {
                     mUri = getContentResolver().insert(RulesColumns.CONTENT_URI, values);
                     mMode = Constants.INTENT_EDIT;
+                    Intent intent = getIntent();
+                    intent.setData(mUri);
+                    intent.putExtra(Constants.INTENT_EDITORNEW, mMode) ;
+
                 } else {
                     getContentResolver().update(mUri, values, null, null);
                 }
@@ -146,7 +151,7 @@ public abstract class RuleEditActivity extends DoneBarActivity
         return mUri;
     }
 
-
+    public Cursor getCursor() { return cursor; }
 
     public abstract void updateView(Cursor cursor);
 

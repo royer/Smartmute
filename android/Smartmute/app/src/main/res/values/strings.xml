@@ -35,6 +35,11 @@
         <item>DWELL</item>
     </string-array>
 
+    <string-array name="rule_activated">
+        <item>Disable</item>
+        <item>Enable</item>
+    </string-array>
+
     <string name="title_activity_wifi_edit">WifiEdit</string>
     <string name="hello_world">Hello world!</string>
     <string name="SSID_Label">SSID:</string>
@@ -64,7 +69,7 @@
     <string name="title_activity_location_rule_edit">LocationRuleEditActivity</string>
     <string name="label_longitude">Longitude:</string>
     <string name="label_latitude">Latitude:</string>
-    <string name="label_range">Range:</string>
+    <string name="label_range">Radius:</string>
     <string name="toast_location_cannot_empty">Longitude or Latitude can not be empty.</string>
     <string name="toast_location_format_error">Longitude or Latitude is wrong format.</string>
     <string name="location_provider_disabled_title">Location Provider is disabled</string>
@@ -74,5 +79,17 @@
     <string name="title_activity_locations">Locations</string>
     <string name="action_mapview">Map</string>
     <string name="action_listview">List</string>
-
+    <string name="click_to_edit">&amp;lt;click to &lt;b>EDIT&lt;/b>&amp;gt;</string>
+    <string name="click_to_add">&amp;lt;click to &lt;b>ADD&lt;/b>&amp;gt;</string>
+    <string name="info_rule_activated" >Activated:&lt;b>%1s&lt;/b></string>
+    <string name="info_trigger_by_enter" formatted="false">Radius: &lt;b>%1dm&lt;/b>.Trigger by &lt;b>ENTER&lt;/b></string>
+    <string name="info_trigger_by_dwell" formatted="false">
+        Radius: &lt;b>%1dm&lt;/b>.\nTriggered by &lt;b>DWELL&lt;/b> and loiter &lt;b>%2d&lt;/b> min</string>
+    <string name="map_info_title_newplace">New Place</string>
+    <string name="map_info_snippet_add">Click to Add</string>
+    <string name="map_info_title_currplace">You are here</string>
+    <string name="discard">Discard</string>
+    <string name="loitering_hint">loitering (minute)</string>
+    <string name="trigger_notification_delay_hint">Notification Delay (sec)</string>
+    <string name="lable_trigger_by">Tigger by:</string>
 </resources>

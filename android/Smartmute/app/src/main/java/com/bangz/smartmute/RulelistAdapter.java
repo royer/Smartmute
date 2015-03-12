@@ -91,11 +91,10 @@ public class RulelistAdapter extends SimpleCursorAdapter {
                 R.drawable.ic_wifi,
                 R.drawable.ic_clock};
         int ruletype = cursor.getInt(idxRuleType);
-        LogUtils.LOGD(TAG, "RULETYPE = " + ruletype);
         vh.imageType.setImageResource(ruletypeiconids[ruletype]);
 
         String descript = cursor.getString(idxDescrip);
-        if (descript.isEmpty() == false) {
+        if (descript != null && descript.isEmpty() == false) {
             vh.txtDetail.setText(descript);
         } else {
             //TODO convert condition string to easy read text

@@ -37,9 +37,10 @@ public interface RulesColumns extends BaseColumns {
             "content://com.bangz.smartmute.provider/rules"
     );
     public static final Uri CONTENT_ID_URI_BASE = Uri.parse(
-            "content://com.bangz.smartmute.provider/rules"
+            "content://com.bangz.smartmute.provider/rules/"
     );
 
+    public static final int ID_PATH_POSITION = 1 ;
     public static final String DEFAULT_SORT_ORDER = "_ID";
 
     // Rule type values

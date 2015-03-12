@@ -14,172 +14,24 @@
   ~  limitations under the License.
   -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:padding="10dp"
+    android:orientation="vertical"
     tools:context="com.bangz.smartmute.LocationRuleEditActivity">
 
 
-
-    <EditText
+    <include layout="@layout/loc_rule_edit_mapfragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/RuleName"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:hint="@string/edit_name_hint"/>
-
-    <LinearLayout
-        android:id="@+id/layoutLng"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_below="@id/RuleName">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/labelLongitude"
-            android:text="@string/label_longitude"
-            android:layout_below="@id/RuleName"
-            android:layout_gravity="center_vertical|left"/>
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/txtLongitude"
-            android:layout_toRightOf="@id/labelLongitude"
-            android:layout_toEndOf="@id/labelLongitude"
-            android:layout_alignBaseline="@id/labelLongitude"
-            android:layout_marginLeft="10dp"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/layoutLat"
-        android:layout_below="@id/layoutLng">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/labelLatitude"
-            android:text="@string/label_latitude"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@id/labelLongitude"
-            android:layout_gravity="left|center_vertical"/>
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/txtLatitude"
-            android:layout_below="@id/txtLongitude"
-            android:layout_alignLeft="@id/txtLongitude"
-            android:layout_alignBaseline="@id/labelLatitude"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/layoutRadius"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/layoutLat">
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/labelRadius"
-            android:text="@string/label_range"
-            android:layout_gravity="center_vertical|left"/>
-
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/txtRadar"
-            android:hint="Meter"
-            android:layout_alignBaseline="@id/labelRadius"
-            android:inputType="numberDecimal" />
-    </LinearLayout>
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/txtDescription"
-        android:hint="@string/edit_description_hint"
-        android:layout_below="@id/layoutRadius"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
+        android:layout_height="0px"
+        android:layout_weight="1"
         />
 
-    <!-- If have time, use custom SeekBar to replace this RadioGroup -->
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/textRingMode"
-        android:layout_alignParentLeft="true"
-        android:layout_below="@id/txtDescription"
-        android:layout_marginTop="7dp"
-        android:text="@string/ringmode"/>
 
-    <RadioGroup
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/ringmode"
-        android:layout_below="@+id/textRingMode"
-        android:layout_alignParentLeft="true"
-        android:layout_margin="5dp"
-        android:checkedButton="@+id/vibrate"
-        android:orientation="horizontal">
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/vibrate"
-            android:text="@string/vibrate"/>
-
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/silence"
-            android:layout_weight="1"
-            android:layout_marginLeft="20dp"
-            android:text="@string/slience"/>
-    </RadioGroup>
-
-    <Switch
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/Activited"
-        android:layout_below="@id/ringmode"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"/>
-
-    <LinearLayout
-        android:id="@+id/layoutTrigger"
+    <include layout="@layout/loc_rule_edit_other_field"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_below="@id/Activited"
-        android:layout_marginTop="20dp">
+        android:layout_height="wrap_content"/>
 
-        <Spinner
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/spinTrans"
-            android:entries="@array/transition_type"/>
-        <EditText
-            android:id="@+id/txtLoitering"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="loitering(Minute)"/>
-        <EditText
-            android:id="@+id/txtNotifyDelay"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="number"
-            android:hint="Notification Delay(Sec)"/>
-    </LinearLayout>
-
-</RelativeLayout>
+</LinearLayout>

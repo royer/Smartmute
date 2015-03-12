@@ -30,6 +30,8 @@ import android.database.Cursor;
 import android.support.v4.app.ListFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -133,6 +135,30 @@ public class RulelistFragment extends ListFragment
         }
 
     }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+
+
+        Activity parentActivity = getActivity() ;
+        if (!(parentActivity instanceof BaseActivity
+                && ((BaseActivity) parentActivity).isDrawerOpened())) {
+            menu.clear();
+
+            inflater.inflate(R.menu.menu_rulelist_fragment, menu);
+
+            super.onCreateOptionsMenu(menu, inflater);
+        }
+
+    }
+
 
     @Override
     public void onDetach() {

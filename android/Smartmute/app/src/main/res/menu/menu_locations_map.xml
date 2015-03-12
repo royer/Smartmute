@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright (c) 2015 Royer Wang. All rights reserved.
   ~
@@ -17,7 +18,25 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.bangz.smartmute.LocationsActivity">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
+    tools:context="com.bangz.smartmute.LocationsMapFragment">
+
+    <item android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+
+    <item android:id="@+id/action_discard"
+        android:title="@string/discard"
+        android:orderInCategory="90"
+        android:icon="@drawable/ic_action_delete"
+        app:showAsAction="always"/>
+
+
+    <item android:id="@+id/action_currentlocation"
+        android:title="Update current location"
+        android:orderInCategory="110"
+        android:icon = "@drawable/ic_action_locate"
+        app:showAsAction="always" />
+
+
 </menu>

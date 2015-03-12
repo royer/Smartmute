@@ -17,6 +17,7 @@
 package com.bangz.smartmute;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.location.Location;
 //import android.location.LocationListener;
@@ -24,8 +25,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -35,66 +38,94 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationListener;
 
-import com.bangz.smartmute.R;
-
 import com.bangz.smartmute.content.LocationCondition;
 import com.bangz.smartmute.content.RulesColumns;
 import com.bangz.smartmute.services.LocationMuteService;
 import com.bangz.smartmute.util.LogUtils;
 import com.bangz.smartmute.util.PrefUtils;
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.SphericalUtil;
 
 
 public class LocationRuleEditActivity extends RuleEditActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
+        OnMapReadyCallback,
+        SeekBar.OnSeekBarChangeListener,
+        GoogleMap.OnMarkerDragListener,
         LocationListener {
 
     private static final String TAG = LocationRuleEditActivity.class.getSimpleName();
 
-    private String strName;
-    private String strDescription;
 
-    //private String strLongitude;
-    //private String strLatitude;
-    private double  mLongitude;
-    private double  mLatitude;
-    private float   mRadius;
-    private boolean bActivited ;
-    private int     mRingMode ;
-    private int     mTransType;
-    private long    mLoitering;
-    private int     mNotifyDelay;
+    GoogleMap       mMap ;
+    LatLng          mLatLng ;
+
+    Marker          mMarker ;
+    MarkerOptions   mMarkerOpts ;
+    private static final String KEY_MARKER = "Marker";
+    private Circle  mCircle ;
+
+
+
+    private GoogleApiClient mGoogleApiClient ;
+
+    SupportMapFragment mapFragment ;
+
+
+    private SeekBar mViewRadius ;
+    private TextView mTextViewRadius ;
+
 
 
     private EditText mEditName ;
-    private EditText mEditDescription;
-    private EditText mEditLongitude;
-    private EditText mEditLatitude;
-    private EditText mEditRadius;
+
     private Switch   mSwitchActivited;
     private RadioGroup mViewRingMode ;
     private Spinner  mSpinnerTransType;
     private EditText mEditLoitering;
     private EditText mEditNotifyDelay;
 
-    private GoogleApiClient mGoogleApiClient ;
+
     private Location        mLastLocation ;
-    private boolean         mRequestLocationUpdate = true ;
 
     private String[]        mTransTypes ;
+
+    // To remember map had be initialized, if false, need zoom map to mLatLng ;
+    private boolean mbMapInited = false ;
+    private static final String KEY_MAPINITED = "MapInited";
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_rule_edit);
 
+
+        mapFragment = (SupportMapFragment)getSupportFragmentManager().
+                findFragmentById(R.id.mapview);
+        mapFragment.getMapAsync(this);
+
         mEditName = (EditText)findViewById(R.id.RuleName);
-        mEditDescription = (EditText)findViewById(R.id.txtDescription);
-        mEditLatitude = (EditText)findViewById(R.id.txtLatitude);
-        mEditLongitude = (EditText)findViewById(R.id.txtLongitude);
-        mEditRadius = (EditText)findViewById(R.id.txtRadar);
         mSwitchActivited = (Switch)findViewById(R.id.Activited);
+        mSwitchActivited.setChecked(true);
+
+        mViewRadius = (SeekBar)findViewById(R.id.seekRadius);
+        mViewRadius.setMax((int)Constants.MAX_RADIUS - (int) Constants.MIN_RADIUS);
+        mViewRadius.setOnSeekBarChangeListener(this);
+        mTextViewRadius = (TextView)findViewById(R.id.txtRadius);
 
         mViewRingMode = (RadioGroup)findViewById(R.id.ringmode);
 
@@ -114,15 +145,127 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
 
 
         if (savedInstanceState == null) {
-            strName = "";
-            strDescription = "";
 
-            mLongitude = 0.0;
-            mLatitude = 0.0;
+            Intent intent = getIntent();
+            mLatLng = intent.getParcelableExtra(Constants.INTENT_LATLNG);
 
-            mRadius = 0;
-            bActivited = true;
-            mRingMode = RulesColumns.RM_NORMAL;
+            if (getMode() == Constants.INTENT_NEW) {
+                int radius = (int)PrefUtils.getDefaultRadius(this);
+                mTextViewRadius.setText(String.format("%d", radius ));
+                mViewRadius.setProgress(radius - (int)Constants.MIN_RADIUS);
+            }
+
+        } else {
+            mbMapInited = savedInstanceState.getBoolean(KEY_MAPINITED) ;
+            mMarkerOpts = savedInstanceState.getParcelable(KEY_MARKER);
+
+        }
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap ;
+
+        mMap.setOnMarkerDragListener(this);
+
+        setupMapIfNeed(getCursor()) ;
+    }
+
+    private void setupMapIfNeed(Cursor cursor) {
+
+        if (!mbMapInited && getMode() == Constants.INTENT_NEW && mLatLng != null) {
+            // it is fresh start activity to add a new place that already have LatLng,
+            // add this marker
+            mMarkerOpts = new MarkerOptions().position(mLatLng)
+                 .title("New Place")
+                 .draggable(true);
+            // TODO: get place name as marker title
+            mMarker = mMap.addMarker(mMarkerOpts);
+            updateCircle(mLatLng, PrefUtils.getDefaultRadius(this));
+
+        } else if (!mbMapInited && getMode() == Constants.INTENT_NEW && mLatLng == null) {
+            // It is fresh start activity to add a new place that with LatLng,
+            // TODO: start Location update to get current LatLng
+        } else if (!mbMapInited && getMode() == Constants.INTENT_EDIT && cursor != null) {
+            // It is fresh start activity to edit a exist place in database and database load is
+            // finished
+
+            makeMarkerFromDatabase(cursor);
+
+
+        } else if (mbMapInited && mMarkerOpts != null) {
+            // It is restore activitey and maker information is restored
+            mMarker = mMap.addMarker(mMarkerOpts) ;
+            updateCircle(mMarker.getPosition(), mViewRadius.getProgress()+Constants.MIN_RADIUS);
+
+        }
+
+        if (mbMapInited == false && mMarker != null) {
+
+            LatLngBounds.Builder bb = new LatLngBounds.Builder();
+            LatLng center = mMarker.getPosition();
+            bb.include(center);
+            float r = Constants.MAX_RADIUS ;
+            bb.include(SphericalUtil.computeOffset(center,r,0));
+            bb.include(SphericalUtil.computeOffset(center,r,90));
+            bb.include(SphericalUtil.computeOffset(center,r,180));
+            bb.include(SphericalUtil.computeOffset(center,r,-90));
+
+            //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mMarker.getPosition(),18));
+            //
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bb.build(),0));
+
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(
+                    new CameraPosition.Builder().
+                            tilt(45).target(center).
+                            zoom(mMap.getCameraPosition().zoom).
+                            build()
+            ));
+
+
+            mbMapInited = true ;
+        }
+
+    }
+
+    void makeMarkerFromDatabase(Cursor cursor) {
+
+        cursor.moveToFirst() ;
+
+        mMarkerOpts = new MarkerOptions();
+        String strname = cursor.getString(cursor.getColumnIndex(RulesColumns.NAME));
+        mMarkerOpts.title(strname);
+        int activated = cursor.getInt(cursor.getColumnIndex(RulesColumns.ACTIVATED));
+        //TODO: set different icon depend activated status
+        double lat = cursor.getDouble(cursor.getColumnIndex(RulesColumns.LATITUDE));
+        double lng = cursor.getDouble(cursor.getColumnIndex(RulesColumns.LONGITUDE));
+        float radius = cursor.getFloat(cursor.getColumnIndex(RulesColumns.RADIUS));
+        mMarkerOpts.position(new LatLng(lat, lng)).draggable(true);
+
+
+        mMarker = mMap.addMarker(mMarkerOpts);
+        updateCircle(mMarker.getPosition(), radius);
+    }
+
+    private void updateCircle(final LatLng center, float radius) {
+
+        if (mCircle != null) {
+            mCircle.setCenter(center);
+            mCircle.setRadius(radius);
+
+        } else {
+            mCircle = mMap.addCircle(new CircleOptions().center(center).radius(radius));
+        }
+    }
+
+    private void updateCircle(float radius) {
+        if (mCircle != null)
+            mCircle.setRadius(radius);
+    }
+
+    private void updateCircle(final LatLng center) {
+        if (mCircle != null) {
+            mCircle.setCenter(center) ;
         }
     }
 
@@ -130,8 +273,42 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
     protected void onResume() {
         super.onResume();
 
-
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(KEY_MAPINITED, mbMapInited);
+        outState.putParcelable(KEY_MARKER, mMarkerOpts);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        int radius = mViewRadius.getProgress() + (int)Constants.MIN_RADIUS ;
+        LogUtils.LOGD(TAG,"remember radius is: " + radius);
+
+        mTextViewRadius.setText(String.format("%d",radius));
+
+        //updateCircle(mMarkerOpts.getPosition(), radius);
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+    }
+
 
     private int getRingMode() {
         int idringmode = mViewRingMode.getCheckedRadioButtonId() ;
@@ -172,115 +349,42 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
             return ;
 
         cursor.moveToFirst() ;
-        strName = cursor.getString(cursor.getColumnIndex(RulesColumns.NAME));
-        mEditName.setText(strName);
 
-        strDescription = cursor.getString(cursor.getColumnIndex(RulesColumns.DESCRIPTION));
-        mEditDescription.setText(strDescription);
+        mEditName.setText(cursor.getString(cursor.getColumnIndex(RulesColumns.NAME)));
 
-        bActivited = (cursor.getInt(cursor.getColumnIndex(RulesColumns.ACTIVATED))!=0);
-        mSwitchActivited.setChecked(bActivited);
+        mSwitchActivited.setChecked(
+                (cursor.getInt(cursor.getColumnIndex(RulesColumns.ACTIVATED))!=0));
 
         String strcondition = cursor.getString(cursor.getColumnIndex(RulesColumns.CONDITION));
         LocationCondition condition = new LocationCondition(strcondition);
-        int locformat = PrefUtils.getLocatonFormat(this);
 
-        mLongitude = cursor.getDouble(cursor.getColumnIndex(RulesColumns.LONGITUDE));
-        String strtemp = Location.convert(mLongitude, locformat);
-        mEditLongitude.setText(strtemp);
 
-        mLatitude = cursor.getDouble(cursor.getColumnIndex(RulesColumns.LATITUDE));
-        strtemp = Location.convert(mLatitude, locformat);
-        mEditLatitude.setText(strtemp);
+        int mRadius = (int)cursor.getFloat(cursor.getColumnIndex(RulesColumns.RADIUS));
+        mViewRadius.setProgress(mRadius-(int)Constants.MIN_RADIUS);
+        mTextViewRadius.setText(String.format("%d",mRadius));
 
-        mRadius = cursor.getFloat(cursor.getColumnIndex(RulesColumns.RADIUS));
-        mEditRadius.setText(String.valueOf(mRadius));
+        setRingMode(cursor.getInt(cursor.getColumnIndex(RulesColumns.RINGMODE)));
 
-        mRingMode = cursor.getInt(cursor.getColumnIndex(RulesColumns.RINGMODE));
-        setRingMode(mRingMode);
+        setTransitionTypeToSpinner(condition.getTriggerCondition().getTransitionType());
 
-        mTransType = condition.getTriggerCondition().getTransitionType();
-        setTransitionTypeToSpinner(mTransType);
-
-        mLoitering = condition.getTriggerCondition().getLoiteringDelay();
+        int mLoitering = condition.getTriggerCondition().getLoiteringDelay();
         String strLoitering = String.valueOf(mLoitering/(60*1000));
         mEditLoitering.setText(strLoitering);
 
 
-        mNotifyDelay = condition.getTriggerCondition().getNotificationDelay();
+        int mNotifyDelay = condition.getTriggerCondition().getNotificationDelay();
         String strNotifyDelay = String.valueOf(mNotifyDelay/1000);
         mEditNotifyDelay.setText(strNotifyDelay);
+
+        if (mMap != null)
+            setupMapIfNeed(cursor) ;
 
     }
 
     @Override
     public boolean isModified() {
-        if (mEditName.getText().toString().trim().equals(strName) == false) {
-            return true;
-        }
-        if (mEditDescription.getText().toString().trim().equals(strDescription) == false) {
-            return true ;
-        }
-        String strtemp = mEditLongitude.getText().toString().trim();
-        if (strtemp.isEmpty() == false) {
-            try {
-                double dtemp = Location.convert(strtemp);
-                if (dtemp != mLongitude)
-                    return true;
-            } catch (NullPointerException e) {
-                if (mLongitude != 0.0)
-                    return true;
-            } catch (IllegalArgumentException e) {
-                // wrong format, it must  modified by user, so return true.
-                return true;
-            }
-        } else {
-            if (mLongitude != 0.0)
-                return true ;
-        }
 
-        strtemp = mEditLatitude.getText().toString().trim();
-        if (strtemp .isEmpty() == false) {
-            try {
-                double dtemp = Location.convert(strtemp);
-                if (dtemp != mLatitude)
-                    return true;
-            } catch (NullPointerException e) {
-                if (mLatitude != 0.0)
-                    return true;
-            } catch (IllegalArgumentException e) {
-                return true;
-            }
-        } else {
-            if (mLatitude != 0.0)
-                return true ;
-        }
-
-        strtemp = mEditRadius.getText().toString().trim();
-        if ((strtemp.isEmpty() && mRadius != 0.0f) ||
-                (strtemp.isEmpty() == false && strtemp.equals(String.valueOf(mRadius)) == false))
-            return true ;
-
-        if (mSwitchActivited.isChecked() != bActivited)
-            return true;
-
-        if (getRingMode() != mRingMode)
-            return true ;
-
-        strtemp = mEditLoitering.getText().toString();
-        if(mLoitering != Integer.valueOf(strtemp)*60*1000) {
-            return true;
-        }
-
-        strtemp = mEditNotifyDelay.getText().toString();
-        if (mNotifyDelay != Integer.valueOf(strtemp)*1000) {
-            return true;
-        }
-
-        if (mTransType != getTransitionTypeFromSpinner())
-            return true ;
-
-        return false;
+        return true;
     }
 
     @Override
@@ -292,43 +396,28 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
             return null ;
         }
 
-        String strdescription = mEditDescription.getText().toString().trim() ;
 
-        String strLongitude = mEditLongitude.getText().toString().trim();
-        if (strLongitude.isEmpty()) {
-            Toast.makeText(this, getString(R.string.toast_location_cannot_empty), Toast.LENGTH_SHORT).show();
-            return null ;
-        }
-        String strLatitude = mEditLatitude.getText().toString().trim();
-        if (strLatitude.isEmpty()) {
-            Toast.makeText(this, getString(R.string.toast_location_cannot_empty),Toast.LENGTH_SHORT).show();
-            return null ;
-        }
-        double longtitude, latitude ;
-        try {
-            longtitude = Location.convert(strLongitude);
-            latitude = Location.convert(strLatitude);
-        }catch (NullPointerException e) {
-            Toast.makeText(this, getString(R.string.toast_location_cannot_empty), Toast.LENGTH_SHORT).show();
-            return null ;
 
-        }catch (IllegalArgumentException e) {
-            Toast.makeText(this, getString(R.string.toast_location_format_error), Toast.LENGTH_SHORT).show();
-            return null ;
-        }
-        String strradar = mEditRadius.getText().toString().trim();
-        float radar ;
-        try {
-            radar = Float.parseFloat(strradar) ;
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Invalid number format in radar.", Toast.LENGTH_SHORT).show();
-            return null;
-        }
+
+        //todo: get latlng
+        double longtitude = 0,latitude = 0 ;
+        float radius = 0;
+
+        longtitude = mMarker.getPosition().longitude;
+        latitude = mMarker.getPosition().latitude ;
+        radius = (float)mViewRadius.getProgress() + Constants.MIN_RADIUS ;
+
         int trans = getTransitionTypeFromSpinner();
-        int loitering = Integer.valueOf(mEditLoitering.getText().toString())*60*1000;
-        int  notifydelay = Integer.valueOf(mEditNotifyDelay.getText().toString())*1000;
+        String strloitering = mEditLoitering.getText().toString();
+        int loitering ;
+        if (strloitering != null && !strloitering.isEmpty())
+            loitering = Integer.valueOf(strloitering)*60*1000;
+        else
+            loitering = 0 ;
+        //int  notifydelay = Integer.valueOf(mEditNotifyDelay.getText().toString())*1000;
+        int notifydelay = 0;
 
-        LocationCondition condition = new LocationCondition(longtitude, latitude, radar,
+        LocationCondition condition = new LocationCondition(longtitude, latitude, radius,
                 trans, loitering, notifydelay);
         String strcondition = condition.BuildConditionString() ;
 
@@ -343,11 +432,11 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
         }
 
         values.put(RulesColumns.NAME, strname);
-        values.put(RulesColumns.DESCRIPTION, strdescription);
+        //values.put(RulesColumns.DESCRIPTION, strdescription);
         values.put(RulesColumns.CONDITION, strcondition);
         values.put(RulesColumns.LATITUDE, latitude);
         values.put(RulesColumns.LONGITUDE, longtitude);
-        values.put(RulesColumns.RADIUS, radar);
+        values.put(RulesColumns.RADIUS, radius);
         values.put(RulesColumns.ACTIVATED, activited);
         values.put(RulesColumns.RINGMODE, ringmode);
         return values;
@@ -356,19 +445,8 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
     @Override
     public void onSuccessUpdateDatabase(Uri uri) {
 
-        strName = mEditName.getText().toString().trim();
-        strDescription = mEditDescription.getText().toString().trim();
-        bActivited = mSwitchActivited.isChecked() ;
-        mRingMode = getRingMode() ;
-        mLongitude = Location.convert(mEditLongitude.getText().toString().trim());
-        mLatitude = Location.convert(mEditLatitude.getText().toString().trim());
-        mRadius = Float.parseFloat(mEditRadius.getText().toString().trim());
 
-        mTransType = getTransitionTypeFromSpinner();
-        mLoitering = Long.valueOf(mEditLoitering.getText().toString())*60*1000l;
-        mNotifyDelay = Integer.valueOf(mEditNotifyDelay.getText().toString())*1000;
-
-        if (bActivited) {
+        if (mSwitchActivited.isChecked()) {
             LocationMuteService.addGeofence(this, uri);
         } else {
             LocationMuteService.removeGeofence(this, uri);
@@ -383,12 +461,10 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
         LogUtils.LOGD(TAG,"onConnected. lastlocation = " + mLastLocation);
         if (mLastLocation != null && getMode() == Constants.INTENT_NEW ) {
             int locformat = PrefUtils.getLocatonFormat(this);
-            mEditLatitude.setText(Location.convert(mLastLocation.getLatitude(),locformat));
-            mEditLongitude.setText(Location.convert(mLastLocation.getLongitude(),locformat));
+
         }
 
         startLocationUpdate();
-        mRequestLocationUpdate = true ;
 
     }
 
@@ -415,16 +491,46 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
     public void onLocationChanged(Location location) {
         if (getMode() == Constants.INTENT_NEW) {
             int lcformat = PrefUtils.getLocatonFormat(this);
-            mEditLatitude.setText(Location.convert(location.getLatitude(), lcformat));
-            mEditLongitude.setText(Location.convert(location.getLongitude(), lcformat));
+
         }
-        mRequestLocationUpdate = false;
 
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,this);
 
     }
 
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
+        mTextViewRadius.setText(String.format("%d", progress + (int)Constants.MIN_RADIUS));
+        updateCircle(progress + Constants.MIN_RADIUS);
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+        updateCircle(marker.getPosition());
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        mMarker = marker ;
+        updateCircle(marker.getPosition());
+        mMarkerOpts.position(marker.getPosition());
+    }
 
     //    @Override
 //    public boolean onCreateOptionsMenu(Menu menu) {

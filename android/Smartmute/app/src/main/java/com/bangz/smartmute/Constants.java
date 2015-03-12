@@ -25,12 +25,17 @@ public class Constants {
     public static final String PACKAGE_NAME = "com.bangz.smartmute";
 
     public static final String INTENT_EDITORNEW = PACKAGE_NAME + ".edit_or_new";
+
     public static final int INTENT_EDIT = 0;
     public static final int INTENT_NEW = 1;
 
+    public static final String INTENT_LATLNG = PACKAGE_NAME + ".LATLNG";
 
     public static final int ONE_MINUTE_IN_MS = (60 * 1000);
     public static final int ONE_SECOND_IN_MS = 1000;
+
+    public static final float MIN_RADIUS = 30;
+    public static final float MAX_RADIUS = 300;
 
     private Constants() {}
 }

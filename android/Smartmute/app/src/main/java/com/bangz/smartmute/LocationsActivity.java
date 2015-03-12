@@ -27,6 +27,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.bangz.common.view.SlidingTabLayout;
+import com.bangz.smartmute.util.LogUtils;
 import com.google.android.gms.maps.GoogleMap;
 
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,12 +35,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 
 public class LocationsActivity extends BaseActivity
 implements RulelistFragment.OnRuleItemClickListerner
-        , OnMapReadyCallback {
+         {
 
 
     private static final String TAG = LocationsActivity.class.getSimpleName();
-    private static final String TAG_MAP = "map";
-    private static final String TAG_LIST = "list";
 
     private SlidingTabLayout mSlidingTabLayout ;
     private ViewPager       mViewPager ;
@@ -47,7 +46,9 @@ implements RulelistFragment.OnRuleItemClickListerner
     private String mCurrentFragmentTag ;
 
 
-    private GoogleMap   mMap ;
+    private LocationsMapFragment mMapFragment ;
+    private RulelistFragment    mRuleListFragment ;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +79,6 @@ implements RulelistFragment.OnRuleItemClickListerner
 //        getSupportFragmentManager().beginTransaction()
 //                .replace(R.id.container, fragment, TAG_LIST)
 //                .commit();
-        mCurrentFragmentTag = TAG_LIST;
     }
 
     @Override
@@ -146,13 +146,7 @@ implements RulelistFragment.OnRuleItemClickListerner
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
 
-        mMap = googleMap;
-
-
-    }
 
     @Override
     public void onRuleItemSelected(long id, int ruletype) {
@@ -171,6 +165,7 @@ implements RulelistFragment.OnRuleItemClickListerner
             switch(position) {
                 case 0:
                     fragment = LocationsMapFragment.newInstance();
+                    LogUtils.LOGD(TAG,"LocationsMapFragment called.");
                     break;
                 case 1:
                     fragment = RulelistFragment.newInstance(BaseActivity.NAVDRAWER_LOCATIONS+1);

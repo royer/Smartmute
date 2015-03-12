@@ -34,18 +34,11 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.support.v4.widget.DrawerLayout;
 
-import com.google.android.gms.location.Geofence;
-
-import com.bangz.smartmute.R;
-
-import com.bangz.smartmute.content.Condition;
-import com.bangz.smartmute.content.ConditionFactory;
 import com.bangz.smartmute.content.RulesColumns;
 import com.bangz.smartmute.services.LocationMuteService;
 import com.bangz.smartmute.util.LogUtils;
-import com.bangz.smartmute.util.PlayServicesUtils;
+
 
 
 public class RulelistActivity extends BaseActivity
@@ -54,6 +47,7 @@ public class RulelistActivity extends BaseActivity
 
 
     private static final String TAG = RulelistActivity.class.getSimpleName();
+
 
 
     @Override
@@ -73,6 +67,13 @@ public class RulelistActivity extends BaseActivity
 //        };
 //        IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
 //        registerReceiver(ringReceive,filter);
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
 
     }
 

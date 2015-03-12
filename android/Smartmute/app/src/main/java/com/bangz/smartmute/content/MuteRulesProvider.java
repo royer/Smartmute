@@ -74,9 +74,22 @@ public class MuteRulesProvider extends ContentProvider {
         //throw new UnsupportedOperationException("Not yet implemented");
         Log.d(TAG, "Deleting record.");
         int count ;
+        String where = selection;
+        switch(getUrlType(uri)) {
+            case RULES:
+                where = selection ;
+                break;
+            case RULES_ID:
+                where = RulesColumns._ID + " = " +
+                        uri.getPathSegments().get(RulesColumns.ID_PATH_POSITION);
+                if (selection != null) {
+                    where = where + " AND " + selection ;
+                }
+                break;
+        }
         try {
             mDb.beginTransaction();
-            count = mDb.delete(RulesColumns.TABLE_NAME, selection, selectionArgs);
+            count = mDb.delete(RulesColumns.TABLE_NAME, where, selectionArgs);
             mDb.setTransactionSuccessful();
         } finally {
             mDb.endTransaction();
