@@ -39,6 +39,7 @@ import com.bangz.common.map.util.MarkerManager;
 import com.bangz.smartmute.content.LocationCondition;
 import com.bangz.smartmute.content.RulesColumns;
 import com.bangz.smartmute.model.MarkerExInfo;
+import com.bangz.smartmute.services.LocationMuteService;
 import com.bangz.smartmute.util.LogUtils;
 import com.bangz.smartmute.util.PrefUtils;
 import com.google.android.gms.common.ConnectionResult;
@@ -53,6 +54,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
@@ -81,6 +84,7 @@ implements OnMapReadyCallback,
 
     private static final String TAG = LocationsMapFragment.class.getSimpleName();
 
+    public static final int ADD_PLACE_REQUEST = 1;
 
     GoogleMap mMap;
     MarkerManager<MarkerExInfo> markerManager ;
@@ -117,6 +121,8 @@ implements OnMapReadyCallback,
 
     private Marker markerSelected = null ;
     private MarkerExInfo meiSelected = null ; // only used for instance restore, screen rotation
+    private Circle mCircle = null ;           //a circle on selected marker which
+                                                // is a database record
 
     private ArrayList<MarkerExInfo> mSavedMarkerExInfos = new ArrayList<MarkerExInfo>();
 
@@ -205,6 +211,23 @@ implements OnMapReadyCallback,
         setHasOptionsMenu(true);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        LogUtils.LOGD(TAG,String.format("onActivityResult requestCode = %d, resultCode = %d",requestCode,resultCode));
+        if (requestCode == ADD_PLACE_REQUEST) {
+            if (resultCode == Activity.RESULT_OK) {
+                if (markerSelected != null) {
+                    MarkerExInfo mei = markerManager.getExtraInfo(markerSelected);
+                    if (mei.getCollectionID() != MC_DATABASE) {
+                        markerManager.remove(markerSelected);
+                        unSelectMarker();
+                    }
+                }
+            }
+        }
+    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -300,9 +323,6 @@ implements OnMapReadyCallback,
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-
-
         mGoogleApiClient.disconnect();
     }
 
@@ -347,8 +367,6 @@ implements OnMapReadyCallback,
         mMap.setOnInfoWindowClickListener(this);
 
         restoreSavedMarkers();
-
-
 
 
         LoaderManager lm = getLoaderManager() ;
@@ -404,8 +422,7 @@ implements OnMapReadyCallback,
                 mei);
 
         if (meiSelected != null && meiSelected.equals(mei)) {
-            markerSelected = marker ;
-            marker.showInfoWindow();
+            selectMarker(marker);
         }
     }
 
@@ -430,14 +447,19 @@ implements OnMapReadyCallback,
 
         MarkerExInfo mei = markerManager.getExtraInfo(markerSelected);
         if (mei.getCollectionID() == MC_DATABASE) {
-            Uri muri = ContentUris.withAppendedId(RulesColumns.CONTENT_URI, mei.getDatabaseId());
-            getActivity().getContentResolver().delete(muri,null,null);
 
             markerManager.remove(markerSelected);
-            markerSelected = null ;
 
-            getActivity().invalidateOptionsMenu();
+            //TODO remove geofence of this id;
+            //getActivity().getContentResolver().delete(muri,null,null);
+            LocationMuteService.deleteGeofence(getActivity(),new long[] {mei.getDatabaseId()});
+
+
+
+
         }
+
+        unSelectMarker();
     }
 
     @Override
@@ -467,16 +489,19 @@ implements OnMapReadyCallback,
                 LatLng latLng = new LatLng(lat, lng);
                 lb.include(latLng);
                 String strName = mCursor.getString(mCursor.getColumnIndex(RulesColumns.NAME));
+                if (strName == null || (strName != null && strName.isEmpty()))
+                    strName = getString(R.string.noname);
                 long id = mCursor.getLong(mCursor.getColumnIndex(RulesColumns._ID));
                 String strCondition = mCursor.getString(mCursor.getColumnIndex(RulesColumns.CONDITION));
                 //LocationCondition condition = new LocationCondition(strCondition);
                 int activited = mCursor.getInt(mCursor.getColumnIndex(RulesColumns.ACTIVATED));
+                float radius = mCursor.getFloat(mCursor.getColumnIndex(RulesColumns.RADIUS));
 
                 StringBuilder snipbuilder = new StringBuilder();
                 snipbuilder.append("Radius:")
-                        .append(mCursor.getFloat(mCursor.getColumnIndex(RulesColumns.RADIUS)))
+                        .append(String.format("%d", (int) radius))
                         .append("\n");
-                snipbuilder.append("Status:").append(activited==1?"Activited":"Disabled");
+
 
 
                 MarkerExInfo mei = new MarkerExInfo(latLng,MC_DATABASE, id, mCursor.getPosition());
@@ -489,13 +514,16 @@ implements OnMapReadyCallback,
                         mei);
 
                 if (meiSelected != null && meiSelected.equals(mei)) {
-                    marker.showInfoWindow();
                     markerSelected = marker;
                 }
 
 
 
             }while(mCursor.moveToNext());
+
+            if (markerSelected != null) {
+                selectMarker(markerSelected);
+            }
             mAllDataBounds = lb.build();
             if (mapInitState < MAP_INIT_BY_DATABASE)
                 setBoundaries(mAllDataBounds);
@@ -519,6 +547,10 @@ implements OnMapReadyCallback,
         if (markerSelected != null) {
             MarkerExInfo mei = markerManager.getExtraInfo(markerSelected) ;
             if (mei.getCollectionID() == MC_DATABASE) {
+                if (mCircle != null) {
+                    mCircle.remove();
+                    mCircle = null ;
+                }
                 markerSelected = null ;
                 meiSelected = null;
                 getActivity().invalidateOptionsMenu();
@@ -633,10 +665,11 @@ implements OnMapReadyCallback,
 
         // add a new place marker on the map. only one new place exist in anytime.
 
+        unSelectMarker();
+
         markerManager.getCollection(MC_ID_NEWPLACE).clear();
 
 
-        markerSelected = null ;
         MarkerExInfo mei = new MarkerExInfo(latLng,MC_NEWPLACE);
         addTempMarker(mei);
 
@@ -649,17 +682,61 @@ implements OnMapReadyCallback,
     @Override
     public void onMapClick(LatLng latLng) {
 
-        markerSelected = null ;
-        getActivity().invalidateOptionsMenu();
+        unSelectMarker();
     }
+
 
     @Override
     public boolean onMarkerClick(Marker marker) {
 
+        selectMarker(marker);
+        return false;
+    }
+
+    private void selectMarker(Marker marker) {
+
         markerSelected = marker ;
         getActivity().invalidateOptionsMenu();
 
-        return false;
+
+        removeCircle();
+
+        MarkerExInfo mei = markerManager.getExtraInfo(marker);
+        if (mei.getCollectionID() == MC_DATABASE) {
+            mCursor.moveToPosition(mei.getCursorPosition());
+            float radius = mCursor.getFloat(mCursor.getColumnIndex(RulesColumns.RADIUS));
+            addCircle(marker, radius);
+
+        }
+
+        marker.showInfoWindow();
+
+    }
+
+    private void unSelectMarker() {
+        if (markerSelected != null) {
+            markerSelected = null;
+            getActivity().invalidateOptionsMenu();
+            removeCircle();
+        }
+    }
+
+
+    private void removeCircle() {
+
+        if (mCircle != null) {
+            mCircle.remove();
+            mCircle = null ;
+        }
+    }
+
+    private void addCircle(Marker marker, float radius) {
+
+        if (mCircle != null) throw new AssertionError(" mCircle must be null when call addCircle.");
+
+        mCircle = mMap.addCircle(new CircleOptions()
+            .center(marker.getPosition()).radius(radius));
+
     }
 
     @Override
@@ -675,14 +752,16 @@ implements OnMapReadyCallback,
                 uri = ContentUris.withAppendedId(RulesColumns.CONTENT_URI, mei.getDatabaseId());
                 intent.setData(uri);
                 intent.putExtra(Constants.INTENT_EDITORNEW,Constants.INTENT_EDIT);
+                startActivity(intent);
                 break;
             case MC_CURRPLACE:
             case MC_NEWPLACE:
                 intent.putExtra(Constants.INTENT_EDITORNEW,Constants.INTENT_NEW);
                 intent.putExtra(Constants.INTENT_LATLNG, latlng);
+                startActivityForResult(intent, ADD_PLACE_REQUEST);
                 break;
         }
-        getActivity().startActivity(intent);
+
     }
 
     private void setBoundaries(LatLngBounds bounds) {
@@ -761,17 +840,7 @@ implements OnMapReadyCallback,
             tv = (TextView)mContentView.findViewById(R.id.TriggerInfo);
             tv.setText(cstr);
 
-            strtemp = mCursor.getString(mCursor.getColumnIndex(RulesColumns.DESCRIPTION));
-            if (strtemp == null)
-                strtemp = "" ;
-            strtemp = strtemp.trim() ;
-            tv = (TextView)mContentView.findViewById(R.id.txtDescription);
-            tv.setText(strtemp);
-            if (strtemp.isEmpty()) {
-                tv.setVisibility(View.GONE);
-            } else {
-                tv.setVisibility(View.VISIBLE);
-            }
+
 
             return mContentView;
         }

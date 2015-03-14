@@ -38,7 +38,7 @@ import android.view.MenuItem;
 import com.bangz.smartmute.content.RulesColumns;
 import com.bangz.smartmute.services.LocationMuteService;
 import com.bangz.smartmute.util.LogUtils;
-
+import com.bangz.smartmute.util.PrefUtils;
 
 
 public class RulelistActivity extends BaseActivity
@@ -57,7 +57,8 @@ public class RulelistActivity extends BaseActivity
 
         setupNavDrawer();
 
-        LocationMuteService.startAll(this);
+        if (PrefUtils.isEnableSmartMute(this) && PrefUtils.isGeofencing(this) == false)
+            LocationMuteService.startAll(this);
 
 //        BroadcastReceiver ringReceive = new BroadcastReceiver() {
 //            @Override

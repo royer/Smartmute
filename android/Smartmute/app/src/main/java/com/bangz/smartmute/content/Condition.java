@@ -17,6 +17,8 @@
 
 package com.bangz.smartmute.content;
 
+import android.content.Context;
+
 /**
  * Created by royerwang on 2014-09-23.
  */
@@ -70,4 +72,5 @@ public abstract class Condition {
     public abstract boolean isValidConditionString(String strcondition) ;
     public abstract String getParamString(String strcondition) ;
     public abstract String BuildConditionString();
+    public abstract String description(final Context ctx);
 }

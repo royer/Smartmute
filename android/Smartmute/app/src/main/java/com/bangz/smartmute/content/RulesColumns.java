@@ -64,9 +64,7 @@ public interface RulesColumns extends BaseColumns {
     public static final String RADIUS = "radius";
     public static final String SECONDCONDITION = "secondcondition"; // addition rules
     public static final String RINGMODE = "ringmode" ;  // which ring mode to be set
-    public static final String DESCRIPTION = "description"; // rule description (only main rule
-                                                            // type is location type, the address
-                                                            // info fill this column
+
 
     public static final String CREATE_TABLE = "CREATE TABLE " + TABLE_NAME + "( "
             + _ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "   //ID
@@ -79,7 +77,6 @@ public interface RulesColumns extends BaseColumns {
             + RADIUS + " REAL, "
             + SECONDCONDITION + " TEXT, "
             + RINGMODE + " INTEGER, "
-            + DESCRIPTION + " TEXT "
             + ");" ;
 
     public static final String[] COLUMNS = { _ID,
@@ -91,6 +88,6 @@ public interface RulesColumns extends BaseColumns {
         LONGITUDE,
         RADIUS,
         SECONDCONDITION,
-        RINGMODE,
-        DESCRIPTION};
+        RINGMODE
+        };
 }

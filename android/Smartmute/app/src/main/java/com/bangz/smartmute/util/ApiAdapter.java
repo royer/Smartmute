@@ -18,6 +18,8 @@ package com.bangz.smartmute.util;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
+import android.provider.Settings;
 
 /**
  * Created by royerwang on 14-12-24.
@@ -33,5 +35,13 @@ public interface ApiAdapter {
      * @param triggerAtMillis
      * @param operation
      */
-    public void setExactAlarm(final AlarmManager am, int type, long triggerAtMillis, PendingIntent operation);
+    public void setExactAlarm(final AlarmManager am, int type, long triggerAtMillis,
+                              PendingIntent operation);
+
+    public static int LOCATION_MODE_OFF = 0; // Settings.Secure.LOCATION_MODE_OFF from API 19
+    public static int LOCATION_MODE_SENSORS_ONLY = 1;
+    public static int LOCATION_MODE_BATTERY_SAVING = 2;
+    public static int LOCATION_MODE_HIGH_ACCURACY = 3;
+
+    public int getLocationMode(Context ctx);
 }

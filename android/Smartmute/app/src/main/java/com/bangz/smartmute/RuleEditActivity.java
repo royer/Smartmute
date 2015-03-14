@@ -62,8 +62,7 @@ public abstract class RuleEditActivity extends DoneBarActivity
             RulesColumns.RADIUS,
             RulesColumns.SECONDCONDITION,
             RulesColumns.ACTIVATED,
-            RulesColumns.RINGMODE,
-            RulesColumns.DESCRIPTION
+            RulesColumns.RINGMODE
     };
 
     @Override
@@ -114,26 +113,23 @@ public abstract class RuleEditActivity extends DoneBarActivity
 
     @Override
     public void onDoneButtonClicked() {
-        if (isModified()) {
-            ContentValues values = getContentValues();
 
-            if ( values != null) {
-                if (mMode == Constants.INTENT_NEW) {
-                    mUri = getContentResolver().insert(RulesColumns.CONTENT_URI, values);
-                    mMode = Constants.INTENT_EDIT;
-                    Intent intent = getIntent();
-                    intent.setData(mUri);
-                    intent.putExtra(Constants.INTENT_EDITORNEW, mMode) ;
+        ContentValues values = getContentValues();
 
-                } else {
-                    getContentResolver().update(mUri, values, null, null);
-                }
+        if ( values != null) {
+            if (mMode == Constants.INTENT_NEW) {
+                mUri = getContentResolver().insert(RulesColumns.CONTENT_URI, values);
+                mMode = Constants.INTENT_EDIT;
+                Intent intent = getIntent();
+                intent.setData(mUri);
+                intent.putExtra(Constants.INTENT_EDITORNEW, mMode) ;
 
-                onSuccessUpdateDatabase(mUri);
-                finish();
+            } else {
+                getContentResolver().update(mUri, values, null, null);
             }
-        } else {
-            finish() ;
+
+            onSuccessUpdateDatabase(mUri);
+            finish();
         }
 
     }
@@ -155,11 +151,6 @@ public abstract class RuleEditActivity extends DoneBarActivity
 
     public abstract void updateView(Cursor cursor);
 
-    /**
-     * Data had changed by user return true or return false
-     * @return
-     */
-    public abstract boolean isModified();
 
     /**
      * subclass creates the ContentValues and fills it.

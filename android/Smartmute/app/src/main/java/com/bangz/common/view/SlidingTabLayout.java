@@ -179,7 +179,7 @@ public class SlidingTabLayout extends HorizontalScrollView {
         // keep each child have same weight. add by royer
         textView.setLayoutParams(
                 new LinearLayout.LayoutParams(
-                        LayoutParams.WRAP_CONTENT,
+                        0,
                         ViewGroup.LayoutParams.WRAP_CONTENT,
                         1.0f));
 

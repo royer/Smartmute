@@ -55,6 +55,8 @@ public class PrefUtils {
     private static final String PREF_LAST_LAT = "pref_last_lat";
     private static final String PREF_LAST_LNG = "pref_last_lng";
 
+    private static final String PREF_GEOFENCING = "pref_geofencing";
+
     public static void enableSmartMute(final Context context, boolean benable) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
 
@@ -177,4 +179,18 @@ public class PrefUtils {
         return new LatLng(lat, lng);
     }
 
+    /**
+     * return true if geofencing is running, or return false.
+     * @param ctx
+     * @return
+     */
+    public static boolean isGeofencing(final Context ctx) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        return sp.getBoolean(PREF_GEOFENCING, false) ;
+    }
+
+    public static void Geofencing(final Context ctx, boolean isrunning) {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(ctx);
+        sp.edit().putBoolean(PREF_GEOFENCING,isrunning).commit();
+    }
 }

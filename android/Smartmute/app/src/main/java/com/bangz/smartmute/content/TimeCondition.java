@@ -17,13 +17,18 @@
 
 package com.bangz.smartmute.content;
 
+import android.content.Context;
+import android.content.res.Resources;
+
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.bangz.smartmute.R;
 import com.bangz.smartmute.util.MyTimeUtils;
 
 /**
@@ -53,6 +58,8 @@ public class TimeCondition extends Condition {
     public static final int IDX_SATURDAY = 6;
 
     public static final int ALLDAYSSET = 0x7F;
+    public static final int WEEKDAYS = 0X3E ;
+    public static final int WEEKEND = 0X41 ;
 
 
     private static final int[] MAP_CALENDARDAYOFWEEK = {
@@ -211,6 +218,45 @@ public class TimeCondition extends Condition {
 
     }
 
+    @Override
+    public String description(Context ctx) {
+        Resources res = ctx.getResources();
+        String days ;
+
+        if (isAllDaySet())
+            days = res.getString(R.string.everyday);
+        else if (whichdays == WEEKDAYS) {
+            days = res.getString(R.string.weekdays);
+        } else if (whichdays == WEEKEND) {
+            days = res.getString(R.string.weekend);
+        } else {
+            StringBuilder s = new StringBuilder();
+            int i;
+            boolean bfirst = true ;
+            for (i = 0; i < 7; i++) {
+                if ((whichdays & (1 << i)) != 0) {
+                    GregorianCalendar calendar = new GregorianCalendar();
+                    calendar.set(Calendar.DAY_OF_WEEK,MAP_CALENDARDAYOFWEEK[i]);
+                    if (bfirst == false) {
+                        s.append(",");
+                    } else
+                        bfirst = false ;
+                    s.append(calendar.getDisplayName(Calendar.DAY_OF_WEEK,Calendar.SHORT,
+                            res.getConfiguration().locale).toUpperCase());
+                }
+            }
+            days = s.toString();
+
+        }
+        SimpleDateFormat formatter = new SimpleDateFormat("hh:mm a");
+
+
+        return String.format(res.getString(R.string.info_time_condition),
+                formatter.format(begin),
+                formatter.format(end),
+                days);
+    }
+
     public Time getBegin() {
         return begin ;
     }
@@ -224,4 +270,5 @@ public class TimeCondition extends Condition {
     public boolean isAllDaySet() {
         return whichdays == ALLDAYSSET ;
     }
+
 }

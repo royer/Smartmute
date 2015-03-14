@@ -31,17 +31,17 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 
 import com.bangz.smartmute.R;
-import com.bangz.smartmute.RulelistActivity;
 import com.bangz.smartmute.content.LocationCondition;
 import com.bangz.smartmute.receiver.LocationProviderChangedReceiver;
+import com.bangz.smartmute.util.ApiAdapter;
+import com.bangz.smartmute.util.ApiAdapterFactory;
 import com.bangz.smartmute.util.ReceUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.bangz.smartmute.Config;
 import com.bangz.smartmute.Constants;
 import com.bangz.smartmute.content.RulesColumns;
 import com.bangz.smartmute.util.LogUtils;
@@ -103,8 +102,12 @@ public class LocationMuteService extends IntentService
             Constants.PACKAGE_NAME + "services.action.add_geofences";
     private static final String ACTION_REMOVE_GEOFENCE =
             Constants.PACKAGE_NAME + "services.action.remove_geofences";
+    private static final String ACTION_DELETE_GEOFENCES =
+            Constants.PACKAGE_NAME + "services.action.delete_geofences";
     private static final String ACTION_GEODEFENCE_TRIGGER =
             Constants.PACKAGE_NAME + "services.geodefence.trigger";
+
+    private static final String PARAM_KEY_IDS = "IDS" ;
 
 
 
@@ -126,6 +129,15 @@ public class LocationMuteService extends IntentService
     public static void removeGeofence(Context context, Uri uri) {
         Intent intent = new Intent(ACTION_REMOVE_GEOFENCE, uri, context, LocationMuteService.class);
         LogUtils.LOGD(TAG, "Pending remove one geofence. id = " + ContentUris.parseId(uri));
+        context.startService(intent);
+    }
+
+    public static void deleteGeofence(Context context, long[] ids) {
+        Intent intent = new Intent(ACTION_DELETE_GEOFENCES, null, context,
+                LocationMuteService.class);
+
+        intent.putExtra(PARAM_KEY_IDS,ids);
+        LogUtils.LOGD(TAG,"Pending delete geofences. id = " + ids.toString());
         context.startService(intent);
     }
 
@@ -181,9 +193,12 @@ public class LocationMuteService extends IntentService
                 handleGeofenceTrigger(intent);
             } else if (ACTION_REMOVE_GEOFENCE.equals(action)) {
                 handleRemoveGeofence(intent.getData());
+            } else if (ACTION_DELETE_GEOFENCES.equals(action)) {
+                handleDeleteGeofences(intent.getLongArrayExtra(PARAM_KEY_IDS));
             }
         }
     }
+
 
 
     /**
@@ -280,6 +295,40 @@ public class LocationMuteService extends IntentService
                 +" remove on geofence id = " + id);
     }
 
+    private void handleDeleteGeofences(long[] ids) {
+
+
+        LogUtils.LOGD(TAG, "Handling delete geofences...");
+        List<String> removeids = new ArrayList<String>();
+        for(long id : ids) {
+            removeids.add(String.valueOf(id));
+        }
+
+        ConnectionResult cr = mGoogleApiClient.blockingConnect();
+        if (cr.isSuccess() == false) {
+            LogUtils.LOGD(TAG, "GoogleApiClient.blockconnect failed! message: " + cr.toString());
+            return ;
+        }
+        Status result =
+                LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, removeids).await();
+        if (result.isSuccess()) {
+            LogUtils.LOGD(TAG,"Delete geofences successful.");
+        } else {
+            LogUtils.LOGD(TAG,"Delete geofences fail. message:" + result.getStatusMessage());
+        }
+        mGoogleApiClient.disconnect();
+
+
+        // now delete these records from database ;
+
+        ContentResolver contentResolver = getContentResolver();
+        String args = TextUtils.join(", ",removeids);
+        String where = String.format("%s IN (%s)", RulesColumns._ID, args);
+        contentResolver.delete(RulesColumns.CONTENT_URI, where, null);
+
+    }
+
+
     private boolean addGeofences(List<Geofence> geofences) {
 
         ConnectionResult connresult = mGoogleApiClient.blockingConnect() ;
@@ -290,15 +339,18 @@ public class LocationMuteService extends IntentService
 
         GeofencingRequest gR = new GeofencingRequest.Builder()
                 .addGeofences(geofences)
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER |
+                GeofencingRequest.INITIAL_TRIGGER_DWELL |
+                GeofencingRequest.INITIAL_TRIGGER_EXIT)
                 .build();
-        //Intent intent = new Intent(ACTION_GEODEFENCE_TRIGGER,null, this, LocationMuteService.class);
-        PendingIntent pi =  getGeofencesPendingItent(this);
+        PendingIntent pi =  getGeofencesPendingIntent(this);
         Status rs = LocationServices.GeofencingApi.addGeofences(mGoogleApiClient,
                                                                                 gR, pi).await() ;
         boolean bret = false;
         if (rs.isSuccess()) {
 
             LogUtils.LOGD(TAG,"Add Geofence successful.");
+            PrefUtils.Geofencing(this, true);
             ReceUtils.enableReceiver(this, LocationProviderChangedReceiver.class, false);
             bret = true ;
 
@@ -357,16 +409,21 @@ public class LocationMuteService extends IntentService
             String strcondition = cursor.getString(cursor.getColumnIndex(RulesColumns.CONDITION));
             LocationCondition condition = new LocationCondition(strcondition);
 
-            Geofence geofence = new Geofence.Builder()
+            Geofence.Builder gb = new Geofence.Builder()
                     .setRequestId(String.valueOf(id))
                     .setTransitionTypes(
                             condition.getTriggerCondition().getTransitionType()
                                     |Geofence.GEOFENCE_TRANSITION_EXIT)
                     .setCircularRegion(latitude, longitude, radius)
-                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                    .setLoiteringDelay(condition.getTriggerCondition().getLoiteringDelay())
-                    .setNotificationResponsiveness(condition.getTriggerCondition().getNotificationDelay())
-                    .build();
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE);
+            if (condition.getTriggerCondition().getTransitionType()
+                    == Geofence.GEOFENCE_TRANSITION_DWELL)
+                    gb.setLoiteringDelay(condition.getTriggerCondition().getLoiteringDelay());
+
+            gb.setNotificationResponsiveness(
+                    condition.getTriggerCondition().getNotificationDelay());
+
+            Geofence geofence = gb.build();
 
             geofences.add(geofence);
         }
@@ -459,6 +516,7 @@ public class LocationMuteService extends IntentService
             }
 
         } else {
+            PrefUtils.Geofencing(this, false);
             if (geoEvent.getErrorCode() == GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE) {
 
                 NotificationUserFailed();
@@ -478,7 +536,7 @@ public class LocationMuteService extends IntentService
 
         LogUtils.LOGD(TAG, "Handle shutdown geofences...");
 
-        PendingIntent pi = getGeofencesPendingItent(this);
+        PendingIntent pi = getGeofencesPendingIntent(this);
 
         ConnectionResult rs = mGoogleApiClient.blockingConnect();
         if (rs.isSuccess() == false) {
@@ -487,11 +545,12 @@ public class LocationMuteService extends IntentService
 
         LocationServices.GeofencingApi.removeGeofences(mGoogleApiClient, pi);
         mGoogleApiClient.disconnect();
+        PrefUtils.Geofencing(this, false);
 
         LogUtils.LOGD(TAG,"Successful shutdown geofence.");
     }
 
-    private PendingIntent getGeofencesPendingItent(Context context) {
+    private PendingIntent getGeofencesPendingIntent(Context context) {
 
         Intent intent = new Intent(ACTION_GEODEFENCE_TRIGGER,null, context, LocationMuteService.class);
         return PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -507,12 +566,13 @@ public class LocationMuteService extends IntentService
                 .setAutoCancel(true);
 
 
-        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
-        boolean bProviderEnabled =
-                lm.isProviderEnabled(LocationManager.GPS_PROVIDER) |
-                lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+//        LocationManager lm = (LocationManager)this.getSystemService(Context.LOCATION_SERVICE);
+//        boolean bProviderEnabled =
+//                lm.isProviderEnabled(LocationManager.GPS_PROVIDER) |
+//                lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
-        if (bProviderEnabled == false) {
+        int locationmode = ApiAdapterFactory.getApiAdapter().getLocationMode(this);
+        if (locationmode <= ApiAdapter.LOCATION_MODE_SENSORS_ONLY) {
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             PendingIntent pi = PendingIntent.getActivity(
                     this,
@@ -524,7 +584,7 @@ public class LocationMuteService extends IntentService
             nb.setContentText(getResources().getString(R.string.location_provider_disabled_text));
             nb.setContentIntent(pi);
         } else {
-            // GPS or Network location provider is OK. let use try again
+            // GPS and Network location provider is OK. let use try again
             Intent intent = new Intent(ACTION_START_GEOFENCES,null,this, LocationMuteService.class);
             PendingIntent pi = PendingIntent.getService(this,
                     0, intent, PendingIntent.FLAG_UPDATE_CURRENT);

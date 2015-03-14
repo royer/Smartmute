@@ -46,12 +46,10 @@ public class WifiEditActivity extends RuleEditActivity {
     /**
      * The last rule name read from database
      */
-    private String strName ;
     private String strSSID;
     private boolean bActivited ;
     private int    mRingMode ;
 
-    private EditText    mEditName ;
     private EditText    mEditSSID;
     private Switch      mSwitchActivited;
 
@@ -64,7 +62,6 @@ public class WifiEditActivity extends RuleEditActivity {
 
         setContentView(R.layout.activity_wifi_edit);
 
-        mEditName = (EditText)findViewById(R.id.WifiRuleName);
         mEditSSID = (EditText)findViewById(R.id.SSID);
         mSwitchActivited = (Switch)findViewById(R.id.Activited);
 
@@ -72,7 +69,6 @@ public class WifiEditActivity extends RuleEditActivity {
 
 
         if (savedInstanceState == null) {
-            strName = "";
             strSSID = "";
             bActivited = false;
             mRingMode = RulesColumns.RM_NORMAL ;
@@ -129,8 +125,6 @@ public class WifiEditActivity extends RuleEditActivity {
         int idxRingMode = cursor.getColumnIndex(RulesColumns.RINGMODE);
         int idxActivited = cursor.getColumnIndex(RulesColumns.ACTIVATED);
 
-        strName = cursor.getString(idxName) ;
-        mEditName.setText(strName);
 
         String strCondition = cursor.getString(idxCondition);
 
@@ -149,23 +143,6 @@ public class WifiEditActivity extends RuleEditActivity {
 
     }
 
-    @Override
-    public boolean isModified() {
-        if (mEditName.getText().toString().equals(strName) == false)
-            return true ;
-
-        if (mEditSSID.getText().toString().equals(strSSID) == false)
-            return true ;
-
-        if (mSwitchActivited.isChecked() != bActivited)
-            return true ;
-
-
-        if (getRingMode() != mRingMode)
-            return true;
-
-        return false;
-    }
 
 
     @Override
@@ -178,14 +155,6 @@ public class WifiEditActivity extends RuleEditActivity {
         }
         strSSID = strssid ;
 
-        String strtemp = mEditName.getText().toString().trim();
-        if (strtemp.isEmpty()) {
-            Toast.makeText(this, getString(R.string.toast_need_rule_name), Toast.LENGTH_SHORT).show();
-            return null ;
-        }
-
-        strSSID = strssid ;
-        strName = strtemp ;
 
         WifiCondition wifiCondition = new WifiCondition();
         wifiCondition.setSSID(strSSID);
@@ -200,10 +169,8 @@ public class WifiEditActivity extends RuleEditActivity {
         if (getMode() == Constants.INTENT_NEW) {
             values.put(RulesColumns.RULETYPE, RulesColumns.RT_WIFI);
             values.put(RulesColumns.SECONDCONDITION,"");
-            values.put(RulesColumns.DESCRIPTION,"");
         }
         values.put(RulesColumns.ACTIVATED, bActivited?1:0);
-        values.put(RulesColumns.NAME, strName);
         values.put(RulesColumns.CONDITION, strCondition);
         values.put(RulesColumns.RINGMODE,ringmode);
 

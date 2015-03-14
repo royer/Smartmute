@@ -44,7 +44,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
     // Button for weekdays
 
     private String strName ;
-    private String strDescription;
 
     private String strStartTime;
     private String strEndTime;
@@ -56,7 +55,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
 
 
     private EditText mEditName ;
-    private EditText mEditDescription;
     private EditText mEditStartTime ;
     private EditText mEditEndTime;
     private Switch   mSwitchActivited;
@@ -71,7 +69,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
         setContentView(R.layout.activity_timerule_edit);
 
         mEditName = (EditText)findViewById(R.id.TimeRuleName);
-        mEditDescription = (EditText)findViewById(R.id.TimeRuleDescription);
         mEditStartTime = (EditText)findViewById(R.id.editStartTime);
         mEditEndTime = (EditText)findViewById(R.id.editEndTime);
         mSwitchActivited = (Switch)findViewById(R.id.Activited);
@@ -88,7 +85,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
 
         if (savedInstanceState == null) {
             strName = "";
-            strDescription = "";
             strStartTime = "";
             strEndTime = "";
             iWhichDays = 0;
@@ -165,15 +161,12 @@ public class TimeRuleEditActivity extends RuleEditActivity {
         cursor.moveToFirst();
         int idxName = cursor.getColumnIndex(RulesColumns.NAME);
         int idxCondition = cursor.getColumnIndex(RulesColumns.CONDITION);
-        int idxDescription = cursor.getColumnIndex(RulesColumns.DESCRIPTION);
         int idxRingMode = cursor.getColumnIndex(RulesColumns.RINGMODE);
         int idxActivited = cursor.getColumnIndex(RulesColumns.ACTIVATED);
 
         strName = cursor.getString(idxName);
         mEditName.setText(strName);
 
-        strDescription = cursor.getString(idxDescription);
-        mEditDescription.setText(strDescription);
 
         mRingMode = cursor.getInt(idxRingMode);
         setRingMode(mRingMode);
@@ -206,31 +199,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
         mButtonDays[6].setChecked(timeCondition.isEnableOnThisDay(TimeCondition.IDX_SATURDAY));
     }
 
-    @Override
-    public boolean isModified() {
-        if (mEditName.getText().toString().equals(strName) == false)
-            return true ;
-
-        if (mEditDescription.getText().toString().equals(strDescription) == false)
-            return true ;
-
-        if (mEditStartTime.getText().toString().equals(strStartTime) == false)
-            return true;
-
-        if (mEditEndTime.getText().toString().equals(strEndTime) == false)
-            return true ;
-
-        if (mSwitchActivited.isChecked() != bActivited)
-            return true ;
-
-        if (getRingMode() != mRingMode)
-            return true ;
-
-        if (getWhichDays() != iWhichDays)
-            return true ;
-
-        return false;
-    }
 
     @Override
     public ContentValues getContentValues() {
@@ -244,7 +212,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
         }
         strName = strname ;
 
-        strDescription = mEditDescription.getText().toString().trim();
         String strtemp = mEditStartTime.getText().toString().trim() ;
         if (strtemp.isEmpty()) {
             Toast.makeText(this, "Invalid time format.", Toast.LENGTH_SHORT).show();
@@ -275,7 +242,6 @@ public class TimeRuleEditActivity extends RuleEditActivity {
         values.put(RulesColumns.ACTIVATED, bActivited?1:0);
         values.put(RulesColumns.RINGMODE, mRingMode);
         values.put(RulesColumns.CONDITION, strcondition);
-        values.put(RulesColumns.DESCRIPTION, strDescription);
 
         return values;
     }

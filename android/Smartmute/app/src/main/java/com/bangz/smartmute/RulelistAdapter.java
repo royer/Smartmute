@@ -19,6 +19,7 @@ package com.bangz.smartmute;
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.text.Html;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -27,7 +28,10 @@ import android.widget.TextView;
 
 import com.bangz.smartmute.R;
 
+import com.bangz.smartmute.content.Condition;
+import com.bangz.smartmute.content.ConditionFactory;
 import com.bangz.smartmute.content.RulesColumns;
+import com.bangz.smartmute.content.WifiCondition;
 import com.bangz.smartmute.util.LogUtils;
 
 /**
@@ -53,10 +57,9 @@ public class RulelistAdapter extends SimpleCursorAdapter {
     private static final String[] columns = {
             RulesColumns.RULETYPE,
             RulesColumns.NAME,
-            RulesColumns.DESCRIPTION,
             RulesColumns.ACTIVATED
     };
-    private static final int [] listitemids = {R.id.RuleIcon,R.id.RuleName,R.id.Detail,R.id.RuleOnOff};
+    private static final int [] listitemids = {R.id.RuleIcon,R.id.RuleName,R.id.RuleOnOff};
 
 
     public RulelistAdapter(Context context, int layout, Cursor c, String[] from, int[] to,
@@ -78,11 +81,13 @@ public class RulelistAdapter extends SimpleCursorAdapter {
         int idxCondition = cursor.getColumnIndex(RulesColumns.CONDITION);
         int idxSecondCondition = cursor.getColumnIndex(RulesColumns.SECONDCONDITION);
         int idxActivited = cursor.getColumnIndex(RulesColumns.ACTIVATED);
-        int idxDescrip = cursor.getColumnIndex(RulesColumns.DESCRIPTION);
 
         ViewHolder vh = (ViewHolder)view.getTag();
 
         String name = cursor.getString(idxName);
+
+        if (name == null || (name != null && name.isEmpty()))
+            name = context.getString(R.string.noname);
         vh.txtRuleName.setText(name);
 
         int[] ruletypeiconids = {
@@ -91,16 +96,18 @@ public class RulelistAdapter extends SimpleCursorAdapter {
                 R.drawable.ic_wifi,
                 R.drawable.ic_clock};
         int ruletype = cursor.getInt(idxRuleType);
+
         vh.imageType.setImageResource(ruletypeiconids[ruletype]);
 
-        String descript = cursor.getString(idxDescrip);
-        if (descript != null && descript.isEmpty() == false) {
-            vh.txtDetail.setText(descript);
-        } else {
-            //TODO convert condition string to easy read text
-            String strcondition = cursor.getString(idxCondition);
-            vh.txtDetail.setText(strcondition);
+        String strcondition = cursor.getString(idxCondition);
+        Condition condition = ConditionFactory.CreateCondition(strcondition);
+        vh.txtDetail.setText(Html.fromHtml(condition.description(context)));
+
+        if (ruletype == RulesColumns.RT_WIFI) {
+            String ssid = ((WifiCondition)condition).getSSID() ;
+            vh.txtRuleName.setText(ssid);
         }
+
 
         int activeted = cursor.getInt(idxActivited);
         vh.switchActivited.setChecked(activeted != 0);

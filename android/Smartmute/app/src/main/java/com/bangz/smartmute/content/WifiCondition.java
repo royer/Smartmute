@@ -17,6 +17,11 @@
 
 package com.bangz.smartmute.content;
 
+import android.content.Context;
+import android.content.res.Resources;
+
+import com.bangz.smartmute.R;
+
 /**
  * Created by royerwang on 2014-09-23.
  */
@@ -62,6 +67,12 @@ public class WifiCondition extends Condition {
     @Override
     public String BuildConditionString() {
         return buildWifiConditionString(SSID);
+    }
+
+    @Override
+    public String description(Context ctx) {
+        Resources res = ctx.getResources();
+        return String.format(res.getString(R.string.info_wifi_condition),SSID);
     }
 
     public String getSSID() {

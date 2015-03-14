@@ -19,21 +19,14 @@
         android:layout_alignParentStart="true" />
 
 
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/TimeRuleDescription"
-        android:hint="@string/edit_description_hint"
-        android:layout_below="@+id/TimeRuleName"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/label_start"
         android:id="@+id/label_start"
-        android:layout_below="@+id/TimeRuleDescription"
+        android:layout_below="@id/TimeRuleName"
         android:layout_alignParentLeft="true"
         android:layout_alignBaseline="@+id/editStartTime"
         android:layout_alignParentStart="true" />
@@ -45,7 +38,7 @@
         android:inputType="time"
         android:ems="5"
         android:id="@+id/editStartTime"
-        android:layout_below="@+id/TimeRuleDescription"
+        android:layout_below="@id/TimeRuleName"
         android:layout_toRightOf="@+id/label_start"
         android:layout_toEndOf="@+id/label_start"/>
 

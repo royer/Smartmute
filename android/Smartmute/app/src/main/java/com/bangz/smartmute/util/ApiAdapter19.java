@@ -19,16 +19,36 @@ package com.bangz.smartmute.util;
 import android.annotation.TargetApi;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.os.Build;
+import android.provider.Settings;
+
+import static android.os.Build.VERSION_CODES.KITKAT;
 
 /**
  * Created by royerwang on 14-12-24.
  */
 public class ApiAdapter19 extends ApiAdapter15 {
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
+    @TargetApi(KITKAT)
     @Override
     public void setExactAlarm(AlarmManager am, int type, long triggerAtMillis, PendingIntent operation) {
         am.setExact(type, triggerAtMillis, operation);
+    }
+
+    @TargetApi(KITKAT)
+    @Override
+    public int getLocationMode(Context ctx) {
+
+        int locationmode = Settings.Secure.LOCATION_MODE_OFF;
+        try {
+            locationmode = Settings.Secure.getInt(ctx.getContentResolver(),
+                    Settings.Secure.LOCATION_MODE);
+
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return locationmode ;
     }
 }

@@ -80,8 +80,7 @@ public class RulelistFragment extends ListFragment
             RulesColumns.RULETYPE,
             RulesColumns.CONDITION,
             RulesColumns.SECONDCONDITION,
-            RulesColumns.RINGMODE,
-            RulesColumns.DESCRIPTION
+            RulesColumns.RINGMODE
     };
 
     /**

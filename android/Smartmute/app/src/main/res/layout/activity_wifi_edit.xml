@@ -24,22 +24,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/label_NameEdit"
-        android:id="@+id/Name_Label"
-        android:layout_below="@+id/SSID"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
 
-    <EditText
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/WifiRuleName"
-        android:layout_below="@+id/Name_Label"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
 
     <!-- If have time, use custom SeekBar to replace this RadioGroup -->
     <TextView
@@ -47,7 +32,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/textRingMode"
         android:layout_alignParentLeft="true"
-        android:layout_below="@id/WifiRuleName"
+        android:layout_below="@id/SSID"
         android:layout_marginTop="7dp"
         android:text="@string/ringmode"/>
 

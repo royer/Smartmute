@@ -16,13 +16,18 @@
 
 package com.bangz.smartmute;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.location.Location;
 //import android.location.LocationListener;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
@@ -31,6 +36,8 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bangz.smartmute.util.ApiAdapter;
+import com.bangz.smartmute.util.ApiAdapterFactory;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.Geofence;
@@ -113,6 +120,9 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_location_rule_edit);
 
+        Intent intent = getIntent();
+        mLatLng = intent.getParcelableExtra(Constants.INTENT_LATLNG);
+
 
         mapFragment = (SupportMapFragment)getSupportFragmentManager().
                 findFragmentById(R.id.mapview);
@@ -130,24 +140,32 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
         mViewRingMode = (RadioGroup)findViewById(R.id.ringmode);
 
         mSpinnerTransType = (Spinner)findViewById(R.id.spinTrans);
+        mSpinnerTransType.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    mEditLoitering.setVisibility(View.INVISIBLE);
+                } else if (position == 1) {
+                    mEditLoitering.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
         mEditLoitering = (EditText)findViewById(R.id.txtLoitering);
         mEditNotifyDelay = (EditText)findViewById(R.id.txtNotifyDelay);
 
         mTransTypes = getResources().getStringArray(R.array.transition_type);
 
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
-
-        mGoogleApiClient.connect();
 
 
         if (savedInstanceState == null) {
 
-            Intent intent = getIntent();
-            mLatLng = intent.getParcelableExtra(Constants.INTENT_LATLNG);
 
             if (getMode() == Constants.INTENT_NEW) {
                 int radius = (int)PrefUtils.getDefaultRadius(this);
@@ -159,7 +177,41 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
             mbMapInited = savedInstanceState.getBoolean(KEY_MAPINITED) ;
             mMarkerOpts = savedInstanceState.getParcelable(KEY_MARKER);
 
+
         }
+
+        if (getMode() == Constants.INTENT_NEW && mLatLng == null &&
+                mbMapInited == false) {
+            // Need query current location
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
+
+            mGoogleApiClient.connect();
+        }
+
+        if (ApiAdapterFactory.getApiAdapter().getLocationMode(this) <=
+                ApiAdapter.LOCATION_MODE_SENSORS_ONLY) {
+            //TODO mention use adjust location mode
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setPositiveButton(getString(R.string.btn_text_location_setting),
+                    new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                    startActivity(intent);
+                }
+            });
+            builder.setTitle(getString(R.string.Warning));
+            builder.setMessage(getString(R.string.need_location_service_message));
+
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+        }
+
     }
 
     @Override
@@ -185,7 +237,7 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
 
         } else if (!mbMapInited && getMode() == Constants.INTENT_NEW && mLatLng == null) {
             // It is fresh start activity to add a new place that with LatLng,
-            // TODO: start Location update to get current LatLng
+            // wait location update to fill the mLatLng.
         } else if (!mbMapInited && getMode() == Constants.INTENT_EDIT && cursor != null) {
             // It is fresh start activity to edit a exist place in database and database load is
             // finished
@@ -350,7 +402,10 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
 
         cursor.moveToFirst() ;
 
-        mEditName.setText(cursor.getString(cursor.getColumnIndex(RulesColumns.NAME)));
+        String name = cursor.getString(cursor.getColumnIndex(RulesColumns.NAME));
+        if (name == null || (name != null && name.isEmpty()))
+            name = getString(R.string.noname);
+        mEditName.setText(name);
 
         mSwitchActivited.setChecked(
                 (cursor.getInt(cursor.getColumnIndex(RulesColumns.ACTIVATED))!=0));
@@ -381,25 +436,12 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
 
     }
 
-    @Override
-    public boolean isModified() {
-
-        return true;
-    }
 
     @Override
     public ContentValues getContentValues() {
 
         String strname = mEditName.getText().toString().trim();
-        if (strname.isEmpty()) {
-            Toast.makeText(this, getString(R.string.toast_need_rule_name), Toast.LENGTH_SHORT).show();
-            return null ;
-        }
 
-
-
-
-        //todo: get latlng
         double longtitude = 0,latitude = 0 ;
         float radius = 0;
 
@@ -432,7 +474,6 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
         }
 
         values.put(RulesColumns.NAME, strname);
-        //values.put(RulesColumns.DESCRIPTION, strdescription);
         values.put(RulesColumns.CONDITION, strcondition);
         values.put(RulesColumns.LATITUDE, latitude);
         values.put(RulesColumns.LONGITUDE, longtitude);
@@ -452,17 +493,13 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
             LocationMuteService.removeGeofence(this, uri);
         }
 
+        setResult(RESULT_OK);
+
     }
 
     @Override
     public void onConnected(Bundle bundle) {
 
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient) ;
-        LogUtils.LOGD(TAG,"onConnected. lastlocation = " + mLastLocation);
-        if (mLastLocation != null && getMode() == Constants.INTENT_NEW ) {
-            int locformat = PrefUtils.getLocatonFormat(this);
-
-        }
 
         startLocationUpdate();
 
@@ -471,30 +508,34 @@ public class LocationRuleEditActivity extends RuleEditActivity implements
     @Override
     public void onConnectionSuspended(int i) {
 
+        LogUtils.LOGD(TAG,"GgoogleApiClient onConnectionSuspended i="+i);
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
+        LogUtils.LOGD(TAG,"GoogleApiClient onConnectionFailed: "+connectionResult.toString());
     }
 
     private void startLocationUpdate() {
         LocationRequest locationRequest = new LocationRequest() ;
-        locationRequest.setInterval(1000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        locationRequest.setFastestInterval(5000);
+        locationRequest.setInterval(3000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setFastestInterval(1000);
 
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,locationRequest,this);
+        LocationServices.FusedLocationApi.
+                requestLocationUpdates(mGoogleApiClient,locationRequest,this);
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        if (getMode() == Constants.INTENT_NEW) {
-            int lcformat = PrefUtils.getLocatonFormat(this);
 
-        }
+        mLatLng = new LatLng(location.getLatitude(),location.getLongitude());
 
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient,this);
+
+        if (mMap != null)
+            setupMapIfNeed(null);
 
     }
 

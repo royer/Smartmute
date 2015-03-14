@@ -21,13 +21,13 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
 
     private final RULE[] TEST_RULES = {
         new RULE("TestLocation01", 1, RulesColumns.RT_LOCATION,"location: 45.223, -56.764",
-                45.223, -56.764, 20.0f,"",RulesColumns.RM_SILENT,""),
+                45.223, -56.764, 20.0f,"",RulesColumns.RM_SILENT),
         new RULE("TestLocation02", 1, RulesColumns.RT_LOCATION,"Location:-89.45, 65.667",
-                -89.45, 65.667, 50.4f,"", RulesColumns.RM_VIBRATE,""),
-        new RULE("TestWifi01",1, RulesColumns.RT_WIFI,"Wifi: netgear44",0,0,0,"",RulesColumns.RM_VIBRATE,""),
-        new RULE("TestWifi02",1, RulesColumns.RT_WIFI, "WIFI: ROYERnono",0,0,0,"", RulesColumns.RM_SILENT,""),
-        new RULE("TestTime01",1,RulesColumns.RT_TIME,"TIME: 23:15, 7:20,1111111",0,0,0,"",RulesColumns.RM_SILENT,""),
-        new RULE("TestTime02",1,RulesColumns.RT_TIME,"TIME: 13:00, 16:00,0111110",0,0,0,"",RulesColumns.RM_SILENT,"")
+                -89.45, 65.667, 50.4f,"", RulesColumns.RM_VIBRATE),
+        new RULE("TestWifi01",1, RulesColumns.RT_WIFI,"Wifi: netgear44",0,0,0,"",RulesColumns.RM_VIBRATE),
+        new RULE("TestWifi02",1, RulesColumns.RT_WIFI, "WIFI: ROYERnono",0,0,0,"", RulesColumns.RM_SILENT),
+        new RULE("TestTime01",1,RulesColumns.RT_TIME,"TIME: 23:15, 7:20,1111111",0,0,0,"",RulesColumns.RM_SILENT),
+        new RULE("TestTime02",1,RulesColumns.RT_TIME,"TIME: 13:00, 16:00,0111110",0,0,0,"",RulesColumns.RM_SILENT)
     };
 
     public MuteRulesProviderTest() {
@@ -61,7 +61,7 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
     public void testInserts() {
         RULE rule = new RULE("Single Test", 1, RulesColumns.RT_LOCATION,
                 "location: 34.4522, -22.5443",
-                34.4522,-22.5443,30.0f,"",RulesColumns.RM_SILENT,"");
+                34.4522,-22.5443,30.0f,"",RulesColumns.RM_SILENT);
 
         Uri  rowUri = mMockResolver.insert(RulesColumns.CONTENT_URI, rule.getContentValues());
         long rowid = ContentUris.parseId(rowUri);
@@ -89,7 +89,6 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
         int idxRadius    = cursor.getColumnIndex(RulesColumns.RADIUS);
         int idxSecondCondition = cursor.getColumnIndex(RulesColumns.SECONDCONDITION);
         int idxRingmode = cursor.getColumnIndex(RulesColumns.RINGMODE);
-        int idxDescrip = cursor.getColumnIndex(RulesColumns.DESCRIPTION);
 
         assertEquals(rule.name, cursor.getString(idxName));
         assertEquals(rule.actived, cursor.getInt(idxActivated));
@@ -100,7 +99,6 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
         assertEquals(rule.radius, cursor.getFloat(idxRadius));
         assertEquals(rule.secondcondition, cursor.getString(idxSecondCondition));
         assertEquals(rule.ringmode, cursor.getInt(idxRingmode));
-        assertEquals(rule.descript, cursor.getString(idxDescrip));
 
         //insert subtest 2
         //Test that we cann't insert a record whose id value already exists
@@ -158,7 +156,6 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
         ContentValues values = new ContentValues();
 
         values.put(RulesColumns.ACTIVATED, 0);
-        values.put(RulesColumns.DESCRIPTION,"This is update test.");
 
         int rowupdated = mMockResolver.update(
                 RulesColumns.CONTENT_URI,
@@ -188,7 +185,6 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
                 RulesColumns.ACTIVATED,
                 RulesColumns.SECONDCONDITION,
                 RulesColumns.RINGMODE,
-                RulesColumns.DESCRIPTION
         };
 
         final String NAME_SELECTION = RulesColumns.NAME + " = ?";
@@ -296,10 +292,9 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
         float   radius;
         String  secondcondition;
         int     ringmode;
-        String  descript;
 
         public RULE(String n, int a, int rt, String mcondition,
-                    double lati, double longi, float r,String scondition, int rm, String desc) {
+                    double lati, double longi, float r,String scondition, int rm) {
             name = n;
             actived = a;
             ruletype = rt;
@@ -309,7 +304,6 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
             radius = r;
             secondcondition = scondition;
             ringmode = rm;
-            descript = desc ;
         }
 
         public ContentValues getContentValues() {
@@ -325,7 +319,6 @@ public class MuteRulesProviderTest extends ProviderTestCase2<MuteRulesProvider> 
             values.put(RulesColumns.RADIUS, radius);
             values.put(RulesColumns.SECONDCONDITION, secondcondition);
             values.put(RulesColumns.RINGMODE, ringmode);
-            values.put(RulesColumns.DESCRIPTION, descript);
             return values;
 
         }

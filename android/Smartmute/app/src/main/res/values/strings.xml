@@ -92,4 +92,14 @@
     <string name="loitering_hint">loitering (minute)</string>
     <string name="trigger_notification_delay_hint">Notification Delay (sec)</string>
     <string name="lable_trigger_by">Tigger by:</string>
+    <string name="info_wifi_condition" formatted="false">
+        Triggered when connected wifi: &lt;b>%1s&lt;/b></string>
+    <string name="info_time_condition" formatted="false">from %1s to %2s on %3s.</string>
+    <string name="everyday">everyday</string>
+    <string name="weekdays">weekdays</string>
+    <string name="weekend">weekend</string>
+    <string name="noname">&lt;NO NAME></string>
+    <string name="btn_text_location_setting">Location Settings</string>
+    <string name="Warning">Warning</string>
+    <string name="need_location_service_message">Location mute need location services ON or mode set to High accuracy or Battery saving</string>
 </resources>

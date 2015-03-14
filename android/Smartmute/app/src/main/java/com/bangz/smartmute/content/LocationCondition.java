@@ -17,6 +17,11 @@
 
 package com.bangz.smartmute.content;
 
+import android.content.Context;
+import android.content.res.Resources;
+
+import com.bangz.smartmute.Constants;
+import com.bangz.smartmute.R;
 import com.google.android.gms.location.Geofence;
 
 import org.json.JSONException;
@@ -209,6 +214,20 @@ public class LocationCondition extends Condition {
         sb.append(json.toString());
 
         return sb.toString();
+    }
+
+    @Override
+    public String description(final Context ctx) {
+        Resources res = ctx.getResources();
+        int transition = getTriggerCondition().getTransitionType();
+        if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            return String.format(res.getString(R.string.info_trigger_by_enter),(int)radius);
+        } else {
+            return String.format(res.getString(R.string.info_trigger_by_dwell),
+                    (int)radius,
+                    getTriggerCondition().getLoiteringDelay()/ Constants.ONE_MINUTE_IN_MS);
+        }
+
     }
 
     public double getLongitude() {
